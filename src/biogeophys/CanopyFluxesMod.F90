@@ -717,6 +717,9 @@ contains
       do f = 1, fn
          p = filterp(f)
          c = patch%column(p)
+         
+         elai(p)=0.01
+         esai(p)=0.01         
 
          lt = min(elai(p)+esai(p), tlsai_crit)
          egvf =(1._r8 - alpha_aero * exp(-lt)) / (1._r8 - alpha_aero * exp(-tlsai_crit))
@@ -919,6 +922,7 @@ contains
                  svpts(begp:endp), eah(begp:endp), o2(begp:endp), &
                  co2(begp:endp), rb(begp:endp), dayl_factor(begp:endp), &
                  atm2lnd_inst, temperature_inst, canopystate_inst, photosyns_inst)
+            print *, "canopy_photosynthesis_test"
 
          else ! not use_fates
 
