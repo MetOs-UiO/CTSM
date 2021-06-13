@@ -1385,7 +1385,7 @@ contains
             snocan(p) = max(0._r8,snocan(p)+(qflx_tran_veg(p)-qflx_evap_veg(p))*dtime)
          end if 
          print *, "test_mosslichen1"                
-      end if
+      end do
       
       if ( use_fates ) then
          
