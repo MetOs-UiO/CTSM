@@ -28,6 +28,7 @@ module SurfaceAlbedoMod
   use LandunitType      , only : lun                
   use ColumnType        , only : col                
   use PatchType         , only : patch                
+  use EDPftvarcon       , only : EDPftvarcon_inst   ! Hui
   !
   implicit none
   !
@@ -302,6 +303,10 @@ contains
     integer  :: num_novegsol                                                              ! number of vegetated patches where coszen>0
     integer  :: filter_vegsol   (bounds%endp-bounds%begp+1)                               ! patch filter where vegetated and coszen>0
     integer  :: filter_novegsol (bounds%endp-bounds%begp+1)                               ! patch filter where vegetated and coszen>0
+    integer  :: num_nvsol                                                                ! number of M&L patches where coszen>0
+    integer  :: num_nonvsol                                                              ! number of non M&L patches where coszen>0
+    integer  :: filter_nvsol   (bounds%endp-bounds%begp+1)                               ! patch filter where M&L and coszen>0
+    integer  :: filter_nonvsol (bounds%endp-bounds%begp+1)                               ! patch filter where non M&L and coszen>0
     real(r8) :: wl              (bounds%begp:bounds%endp)                                 ! fraction of LAI+SAI that is LAI
     real(r8) :: ws              (bounds%begp:bounds%endp)                                 ! fraction of LAI+SAI that is SAI
     real(r8) :: blai(bounds%begp:bounds%endp)                                             ! lai buried by snow: tlai - elai
@@ -312,6 +317,9 @@ contains
     real(r8) :: tau(bounds%begp:bounds%endp,numrad)                                       ! leaf/stem tran weighted by fraction LAI and SAI
     real(r8) :: h2osno_total    (bounds%begc:bounds%endc)                                 ! total snow water (mm H2O)
     real(r8) :: albsfc          (bounds%begc:bounds%endc,numrad)                          ! albedo of surface underneath snow (col,bnd) 
+    real(r8) :: albsfc_d          (bounds%begc:bounds%endc,numrad)                          ! albedo of surface underneath snow (col,bnd) 
+    real(r8) :: albsfc_nv       (bounds%begc:bounds%endc,numrad)                          ! Hui: albedo of moss and lichen surface underneath snow (col,bnd)
+    real(r8) :: albsfc_nv_d       (bounds%begc:bounds%endc,numrad)                        ! Hui: albedo of moss and lichen surface underneath snow (col,bnd) 
     real(r8) :: albsnd(bounds%begc:bounds%endc,numrad)                                    ! snow albedo (direct)
     real(r8) :: albsni(bounds%begc:bounds%endc,numrad)                                    ! snow albedo (diffuse)
     real(r8) :: albsnd_pur      (bounds%begc:bounds%endc,numrad)                          ! direct pure snow albedo (radiative forcing)
@@ -335,6 +343,7 @@ contains
     real(r8) :: mss_cnc_aer_in_fdb     (bounds%begc:bounds%endc,-nlevsno+1:0,sno_nbr_aer) ! mass concentration of all aerosol species for feedback calculation (col,lyr,aer) [kg kg-1]
     real(r8), parameter :: mpe = 1.e-06_r8                                                ! prevents overflow for division by zero
     integer , parameter :: nband =numrad                                                  ! number of solar radiation waveband classes
+    real(r8) :: wtcol_nv (bounds%begc:bounds%endc,numrad)                                ! keep weight of all no-vascular plants                                ! Hui: sum of patch coverred by moss and lichen
     !-----------------------------------------------------------------------
 
    associate(&
@@ -479,6 +488,37 @@ contains
     ! Ground surface albedos
     ! Note that ground albedo routine will only compute nonzero snow albedos
     ! where coszen > 0
+    
+    
+! Create solar-vegetated filter for the following calculations
+! Hui: This part needs to be moved here
+    num_vegsol  = 0
+    num_novegsol= 0
+    num_nvsol   = 0
+    num_nonvsol = 0
+    do fp = 1,num_nourbanp
+       p = filter_nourbanp(fp)
+          if (coszen_patch(p) > 0._r8) then
+             if ((lun%itype(patch%landunit(p)) == istsoil .or.  &
+                  lun%itype(patch%landunit(p)) == istcrop     ) &
+                 .and. (elai(p) + esai(p)) > 0._r8) then
+                    num_vegsol = num_vegsol + 1
+                    filter_vegsol(num_vegsol) = p
+                    if(EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 3 .or. EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 4) then                 ! Hui: add nv filter here
+                      num_nvsol = num_nvsol + 1
+                      filter_nvsol(num_nvsol) = p
+                    end if
+             else
+                num_novegsol = num_novegsol + 1
+                filter_novegsol(num_novegsol) = p
+!                if(EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 3 .or. EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 4) then
+!                   num_nonvsol = num_nonvsol + 1
+!                   filter_nonvsol(num_nonvsol) = p
+!                end if
+             end if
+          end if
+    end do
+    
 
     call SoilAlbedo(bounds, &
          num_nourbanc, filter_nourbanc, &
@@ -487,11 +527,69 @@ contains
          albsni(bounds%begc:bounds%endc, :), &  
          lakestate_inst, temperature_inst, waterstatebulk_inst, surfalb_inst)
 
-    ! set variables to pass to SNICAR.
+!Hui: To do: 1. how the variables from this radiation is used in SNICAR_RT (done)
+!        2. how to update only column occupied by moss and lichen
+!           if pft is covered by snow, then do this simulations (snow burial as the condition, not only moss or lichen)
+!           when calculate mosslichen radiation,
+!                  (1)Try1: assume it is on the top canopy (not bottom canopy), simplist, but it is not accurate (undercanopy mosslichen get unrealistic solaradiation)
+!                  (2)Try2: include snow cover fraction to generalize the mosslichen radiation to snow covered elai and esai (always use the same scheme for snow and snow-free condition)
+!                 （3)Try3: use the two different scheme for snow (assuming top canopy) and snow-free condition (separate upper and under canopy )
+!                  (4)Try4 (super tricky): use the two different scheme for snow (assume both upper or lower canopy) and snow-free condition (separate upper and under canopy)
+!        3. how to recognize moss and lichen patch for calculation: this is done in fates not here. (But it is also needed to have mosslichen filter in CLM too.)
+!        4. how to calculate radiation absorption: wrap_sunfrac need to be modified
 
+    if (use_fates) then
+       call clm_fates%wrap_mosslichen_radiation(bounds, nc, &
+                 num_vegsol, filter_vegsol, &
+                 coszen_patch(bounds%begp:bounds%endp), surfalb_inst)
+
+!Hui: should do filter here, to recognize patches covered by moss and lichen to have different treatment.
+!     FATES can not handle the patches without moss and lichen
+       
+       do c=bounds%begc,bounds%endc
+           albsfc_nv(c,:)     = 0                   ! create a new variable to keep moss and lichen albedo for column
+           albsfc_nv_d(c,:)     = 0 
+           wtcol_nv(c,:)     = 0                   ! keep the sum of moss and lichen area weight in a column
+       end do
+       
+       ! sum up non-vascular plant albedo
+       do ib = 1, numrad
+          do fp = 1,num_nvsol
+             p = filter_nvsol(fp)
+             c = patch%column(p)
+             !Hui: use diffusive albedo for surface albedo here, 
+             ! how to aggregate surface albedo for moss and lichen? Starting from cohort to patch to column
+             ! assume moss and lichen cover limited fraction of soil rather than the whole soil column
+             albsfc_nv(c,ib)  = albsfc_nv(c,ib) + albi(p,ib) * patch%wtcol(p)
+             albsfc_nv_d(c,ib)  = albsfc_nv_d(c,ib) + albd(p,ib) * patch%wtcol(p)
+             wtcol_nv(c,ib) = wtcol_nv(c,ib)+patch%wtcol(p)
+             print *, "test_rad2: albi, wtcol=", albi(p,ib), patch%wtcol(p)
+          end do
+       end do
+       print *, "test_rad3: albsfc_nv, wtcol_nv=", albsfc_nv(:,:), wtcol_nv(:,:)
+       
+       ! sum up soil and non-vascular plant albedo
+       do c=bounds%begc,bounds%endc
+          albsfc(c,:)     = albsoi(c,:)*(1-wtcol_nv(c,:))+albsfc_nv(c,:)        ! Weighted average of moss/lichen albedo and soil albedo
+          albsfc_d(c,:)   = albsod(c,:)*(1-wtcol_nv(c,:))+albsfc_nv_d(c,:)
+       end do
+       print *, "test_rad4: albsoi, albsfc=", albsoi(:,:), albsfc(:,:)
+
+       do c=bounds%begc,bounds%endc
+         albsoi(c,:)=albsfc(c,:) 
+         albsod(c,:)=albsfc_d(c,:)
+       end do
+    else
+      do c=bounds%begc,bounds%endc
+          albsfc(c,:)     = albsoi(c,:)
+      end do
+    end if
+    
+    ! call clm_fates%wrap_mosslichen_albedo()
+     
+    ! set variables to pass to SNICAR.
     flg_snw_ice = 1   ! calling from CLM, not CSIM
     do c=bounds%begc,bounds%endc
-       albsfc(c,:)     = albsoi(c,:)
        h2osno_liq(c,:) = h2osoi_liq(c,-nlevsno+1:0)
        h2osno_ice(c,:) = h2osoi_ice(c,-nlevsno+1:0)
        snw_rds_in(c,:) = nint(snw_rds(c,:))
@@ -724,6 +822,7 @@ contains
              if (coszen_col(c) > 0._r8) then
              ! ground albedo was originally computed in SoilAlbedo, but is now computed here
              ! because the order of SoilAlbedo and SNICAR_RT was switched for SNICAR.
+             ! Hui: need to modify soil albedo to the sum of moss and soil
              albgrd(c,ib) = albsod(c,ib)*(1._r8-frac_sno(c)) + albsnd(c,ib)*frac_sno(c)
              albgri(c,ib) = albsoi(c,ib)*(1._r8-frac_sno(c)) + albsni(c,ib)*frac_sno(c)
 
@@ -747,12 +846,13 @@ contains
                 albgrd_pur(c,ib) = albsod(c,ib)*(1.-frac_sno(c)) + albsnd_pur(c,ib)*frac_sno(c)
                 albgri_pur(c,ib) = albsoi(c,ib)*(1.-frac_sno(c)) + albsni_pur(c,ib)*frac_sno(c)
              end if
+             
 
              ! also in this loop (but optionally in a different loop for vectorized code)
              !  weight snow layer radiative absorption factors based on snow fraction and soil albedo
              !  (NEEDED FOR ENERGY CONSERVATION)
              do i = -nlevsno+1,1,1
-              if (.not. use_subgrid_fluxes .or. lun%itype(col%landunit(c)) == istdlak) then 
+              if (.not. use_subgrid_fluxes .or. lun%itype(col%landunit(c)) == istdlak) then   ! Hui: "use_subgrid_fluxes" meaning?
                  if (ib == 1) then
                    flx_absdv(c,i) = flx_absd_snw(c,i,ib)*frac_sno(c) + &
                         ((1.-frac_sno(c))*(1-albsod(c,ib))*(flx_absd_snw(c,i,ib)/(1.-albsnd(c,ib))))
@@ -794,25 +894,6 @@ contains
           endif
        enddo
     enddo
-
-    ! Create solar-vegetated filter for the following calculations
-
-    num_vegsol = 0
-    num_novegsol = 0
-    do fp = 1,num_nourbanp
-       p = filter_nourbanp(fp)
-          if (coszen_patch(p) > 0._r8) then
-             if ((lun%itype(patch%landunit(p)) == istsoil .or.  &
-                  lun%itype(patch%landunit(p)) == istcrop     ) &
-                 .and. (elai(p) + esai(p)) > 0._r8) then
-                    num_vegsol = num_vegsol + 1
-                    filter_vegsol(num_vegsol) = p
-             else
-                num_novegsol = num_novegsol + 1
-                filter_novegsol(num_novegsol) = p
-             end if
-          end if
-    end do
 
     ! Weight reflectance/transmittance by lai and sai
        ! Only perform on vegetated patches where coszen > 0
