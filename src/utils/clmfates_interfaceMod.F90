@@ -209,6 +209,7 @@ module CLMFatesInterfaceMod
       procedure, public :: wrap_accumulatefluxes
       procedure, public :: prep_canopyfluxes
       procedure, public :: wrap_canopy_radiation
+      procedure, public :: wrap_mosslichen_radiation
       procedure, public :: wrap_update_hifrq_hist
       procedure, public :: TransferZ0mDisp
       procedure, public :: InterpFileInputs  ! Interpolate inputs from files
@@ -2175,6 +2176,97 @@ module CLMFatesInterfaceMod
   call t_stopf('fates_wrapcanopyradiation')
 
  end subroutine wrap_canopy_radiation
+ 
+ ! ======================================================================================
+ subroutine wrap_mosslichen_radiation(this, bounds_clump, nc, &
+         num_vegsol, filter_vegsol, coszen, surfalb_inst)
+
+    ! Arguments
+    class(hlm_fates_interface_type), intent(inout) :: this
+    type(bounds_type),  intent(in)             :: bounds_clump
+    ! filter for vegetated pfts with coszen>0
+    integer            , intent(in)            :: nc ! clump index
+    integer            , intent(in)            :: num_vegsol                 
+    integer            , intent(in)            :: filter_vegsol(num_vegsol)    
+    ! cosine solar zenith angle for next time step
+    real(r8)           , intent(in)            :: coszen( bounds_clump%begp: )        
+    type(surfalb_type) , intent(inout)         :: surfalb_inst 
+    
+    ! locals
+    integer                                    :: s,c,p,ifp,icp
+    integer                                    :: mosslichen = 1
+
+    call t_startf('fates_wrapmosslichenradiation')
+
+    associate(&
+         albgrd_col   =>    surfalb_inst%albsod_col         , & !in use soil albedo instead of ground albedo
+         albgri_col   =>    surfalb_inst%albsoi_col         , & !in use soil albedo instead of ground albedo
+         albd         =>    surfalb_inst%albd_patch         , & !out
+         albi         =>    surfalb_inst%albi_patch         , & !out
+         fabd         =>    surfalb_inst%fabd_patch         , & !out
+         fabi         =>    surfalb_inst%fabi_patch         , & !out
+         ftdd         =>    surfalb_inst%ftdd_patch         , & !out
+         ftid         =>    surfalb_inst%ftid_patch         , & !out
+         ftii         =>    surfalb_inst%ftii_patch)            !out
+
+    do s = 1, this%fates(nc)%nsites
+
+       c = this%f2hmap(nc)%fcolumn(s)
+
+         do ifp = 1,this%fates(nc)%sites(s)%youngest_patch%patchno
+           p = ifp+col%patchi(c)
+
+          if( any(filter_vegsol==p) )then
+    
+             this%fates(nc)%bc_in(s)%filter_vegzen_pa(ifp) = .true.
+             this%fates(nc)%bc_in(s)%coszen_pa(ifp)  = coszen(p)
+             this%fates(nc)%bc_in(s)%albgr_dir_rb(:) = albgrd_col(c,:)
+             this%fates(nc)%bc_in(s)%albgr_dif_rb(:) = albgri_col(c,:)
+
+          else
+             
+             this%fates(nc)%bc_in(s)%filter_vegzen_pa(ifp) = .false.
+
+          end if
+
+       end do
+    end do
+
+    call ED_Norman_Radiation(this%fates(nc)%nsites,  &
+         this%fates(nc)%sites, &
+         this%fates(nc)%bc_in,  &
+         this%fates(nc)%bc_out, mosslichen)
+    
+    ! Pass FATES BC's back to HLM
+    ! -----------------------------------------------------------------------------------
+    do icp = 1,num_vegsol
+       p = filter_vegsol(icp)
+       c = patch%column(p)
+       s = this%f2hmap(nc)%hsites(c)
+       ! do if structure here and only pass natveg columns
+       ifp = p-col%patchi(c)
+
+       if(.not.this%fates(nc)%bc_in(s)%filter_vegzen_pa(ifp) )then
+          write(iulog,*) 's,p,ifp',s,p,ifp
+          write(iulog,*) 'Not all patches on the natveg column were passed to canrad',patch%sp_pftorder_index(p)
+!          call endrun(msg=errMsg(sourcefile, __LINE__))
+       else
+          albd(p,:) = this%fates(nc)%bc_out(s)%albd_parb(ifp,:)
+          albi(p,:) = this%fates(nc)%bc_out(s)%albi_parb(ifp,:)
+          fabd(p,:) = this%fates(nc)%bc_out(s)%fabd_parb(ifp,:)
+          fabi(p,:) = this%fates(nc)%bc_out(s)%fabi_parb(ifp,:)
+          ftdd(p,:) = this%fates(nc)%bc_out(s)%ftdd_parb(ifp,:)
+          ftid(p,:) = this%fates(nc)%bc_out(s)%ftid_parb(ifp,:)
+          ftii(p,:) = this%fates(nc)%bc_out(s)%ftii_parb(ifp,:)
+       end if
+    end do
+    
+  end associate
+
+  call t_stopf('fates_wrapmosslichenradiation')
+
+end subroutine wrap_mosslichen_radiation
+
 
  ! ======================================================================================
 
