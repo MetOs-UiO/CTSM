@@ -903,7 +903,12 @@ contains
             ! Done each iteration to account for differences in eah, tv.
 !Hui: saturation vapor pressure for moss and lichen shoulded be modified
 !Hui: Porada et al. 2013, equation B27, B28
-            svpts(p) = el(p)                         ! pa
+            if ( EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 3 .or. EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 4 ) then
+               svpts(p) = qg_soil(c)     ! pa
+            else
+               svpts(p) = el(p) 
+            end if
+
             eah(p) = forc_pbot(c) * qaf(p) / 0.622_r8   ! pa
             rhaf(p) = eah(p)/svpts(p)
          end do
