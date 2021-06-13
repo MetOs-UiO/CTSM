@@ -711,6 +711,7 @@ contains
              if (lun%itype(l)==istsoil .or. lun%itype(l)==istcrop) then
                 fsa_r(p)  = fsa_r(p)  + absrad
              end if
+             print *, "test_rad7: trd,tri, albgrd, albgri", cad(p,ib), cai(p,ib), trd(p,:), tri(p,:), albd(c,:), albgri(c,:),fsa(p),ftdd(p,ib),ftid(p,ib),ftii(p,ib),forc_solad(g,:), forc_solai(g,:)
              if (snl(c) == 0) then
                 sabg_snow(p) = sabg(p)
                 sabg_soil(p) = sabg(p)
@@ -895,6 +896,7 @@ contains
           rvis = albd(p,1)*forc_solad(g,1) + albi(p,1)*forc_solai(g,1)
           rnir = albd(p,2)*forc_solad(g,2) + albi(p,2)*forc_solai(g,2)
           fsr(p) = rvis + rnir
+          print *, "test_rad6: albd, albi", albd(p,:), albi(p,:),fsr(p), forc_solad(g,:), forc_solai(g,:)
           if (use_SSRE) then
              rvisSF = albdSF(p,1)*forc_solad(g,1) + albiSF(p,1)*forc_solai(g,1)
              rnirSF = albdSF(p,2)*forc_solad(g,2) + albiSF(p,2)*forc_solai(g,2)
