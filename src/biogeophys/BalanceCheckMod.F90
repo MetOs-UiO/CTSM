@@ -692,7 +692,7 @@ contains
               write(iulog,*)'sabg           = ' ,sabg(indexp), ((1._r8- frac_sno(indexc))*sabg_soil(indexp) + &
                    frac_sno(indexc)*sabg_snow(indexp)),sabg_chk(indexp)
               write(iulog,*)'forc_tot      = '  ,forc_solad(indexg,1) + forc_solad(indexg,2) + &
-                   forc_solai(indexg,1) + forc_solai(indexg,2)
+                   forc_solai(indexg,1) + forc_solai(indexg,2), forc_lwrad(c)
 
               write(iulog,*)'eflx_lwrad_net = ' ,eflx_lwrad_net(indexp)
               write(iulog,*)'eflx_sh_tot    = ' ,eflx_sh_tot(indexp)
