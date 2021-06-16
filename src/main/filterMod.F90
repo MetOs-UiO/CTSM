@@ -19,6 +19,7 @@ module filterMod
   use ColumnType     , only : col                
   use PatchType      , only : patch
   use glcBehaviorMod , only : glc_behavior_type
+  use EDPftvarcon    , only : EDPftvarcon_inst
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -568,8 +569,14 @@ contains
     do fp = 1, filter(nc)%num_nolakeurbanp
        p = filter(nc)%nolakeurbanp(fp)
        if (frac_veg_nosno(p) > 0) then
-          fe = fe + 1
-          filter(nc)%exposedvegp(fe) = p
+          ! Hui: Consider moss and lichen as soil rather than vegetation, this needs better treatment (nv filter) if a patch has other vegetation
+          !if ( EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 3 .or. EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 4 ) then
+          !   fn = fn + 1
+          !   filter(nc)%noexposedvegp(fn) = p  
+          !else
+             fe = fe + 1
+             filter(nc)%exposedvegp(fe) = p
+          !end if
        else
           fn = fn + 1
           filter(nc)%noexposedvegp(fn) = p
