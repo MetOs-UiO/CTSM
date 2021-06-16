@@ -2111,6 +2111,7 @@ module CLMFatesInterfaceMod
     
     ! locals
     integer                                    :: s,c,p,ifp,icp
+    integer                                    :: mosslichen = 0
 
     call t_startf('fates_wrapcanopyradiation')
 
@@ -2151,7 +2152,7 @@ module CLMFatesInterfaceMod
     call ED_Norman_Radiation(this%fates(nc)%nsites,  &
          this%fates(nc)%sites, &
          this%fates(nc)%bc_in,  &
-         this%fates(nc)%bc_out)
+         this%fates(nc)%bc_out,mosslichen)
     
     ! Pass FATES BC's back to HLM
     ! -----------------------------------------------------------------------------------
