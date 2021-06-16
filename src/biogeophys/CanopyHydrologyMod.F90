@@ -540,11 +540,11 @@ contains
            if ( EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 3 ) then ! Moss
              print *, "moss 1"
              if (use_clm5_fpi) then
-                fpiliq = interception_fraction * tanh(elai(p) + esai(p)) * 4
+                fpiliq = interception_fraction * tanh(elai(p) + esai(p))                      ! Hui: fpiliq can not be over 1, the fraction can increase faster with elai and esai
              else
                 fpiliq = 0.25_r8*(1._r8 - exp(-0.5_r8*(elai(p) + esai(p))))
              end if
-             fpisnow = 1._r8   ! Moss intercept all the snow
+             fpisnow = 0._r8   !Hui: no snow interception, as moss and lichen is assummed to be soil  !1._r8   ! Moss intercept all the snow
            else if ( EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 4 ) then ! Lichen
              print *, "lichen_1"
              if (use_clm5_fpi) then
@@ -552,10 +552,10 @@ contains
              else
                 fpiliq = 0.25_r8*(1._r8 - exp(-0.5_r8*(elai(p) + esai(p))))
              end if
-             fpisnow = (1._r8 - exp(-0.5_r8*(elai(p) + esai(p))))  ! Lichen is the same as other vegetation
+             fpisnow = 0._r8   !Hui: now snow interception, as moss and lichen is assumed to be soil, (1._r8 - exp(-0.5_r8*(elai(p) + esai(p))))  ! Lichen is the same as other vegetation
            else     
              if (use_clm5_fpi) then
-               fpiliq = interception_fraction * tanh(elai(p) + esai(p)) * 4
+               fpiliq = interception_fraction * tanh(elai(p) + esai(p))
              else
                fpiliq = 0.25_r8*(1._r8 - exp(-0.5_r8*(elai(p) + esai(p))))
              end if
