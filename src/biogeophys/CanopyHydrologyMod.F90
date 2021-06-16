@@ -569,6 +569,7 @@ contains
              ! Canopy interception
              qflx_intercepted_snow(p) = forc_snow(p) * fpisnow
              qflx_intercepted_liq(p) = qflx_liq_above_canopy(p) * fpiliq
+             print *, "bug_check2:", qflx_liq_above_canopy(p), fpiliq, elai(p), esai(p)
            
         else
            ! Note that special landunits will be handled here, in addition to soil points
@@ -582,6 +583,7 @@ contains
               qflx_through_snow(p) = forc_snow(p)
               qflx_through_liq(p)  = qflx_liq_above_canopy(p)
            end if
+           
         end if
      end do
 
@@ -1129,6 +1131,8 @@ contains
              qflx_through_liq(p) + &
              qflx_liqcanfall(p) + &
              qflx_irrig_drip(p)
+             
+        print *, "bug_check1:", qflx_liq_grnd_patch(p), qflx_through_liq(p), qflx_liqcanfall(p), qflx_irrig_drip(p)
      end do
 
      call p2c(bounds, num_nolakec, filter_nolakec, &
