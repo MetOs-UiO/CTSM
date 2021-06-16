@@ -33,6 +33,8 @@ Module HydrologyNoDrainageMod
   use ColumnType        , only : col                
   use TopoMod, only : topo_type
   use perf_mod          , only : t_startf, t_stopf
+  use EDPftvarcon         , only : EDPftvarcon_inst
+
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -261,6 +263,9 @@ contains
          smp_l              => soilstate_inst%smp_l_col               , & ! Input:  [real(r8) (:,:) ]  soil matrix potential [mm]            
          smpmin             => soilstate_inst%smpmin_col              , & ! Input:  [real(r8) (:)   ]  restriction for min of soil potential (mm)
          soilpsi            => soilstate_inst%soilpsi_col               & ! Output: [real(r8) (:,:) ]  soil water potential in each soil layer (MPa)
+
+         liqcan             => b_waterstate_inst%liqcan_patch, & ! Output: [real(r8) (:)   ]  canopy liquid (mm H2O)  
+         snocan             => b_waterstate_inst%snocan_patch, & ! Output: [real(r8) (:)   ]  canopy snow (mm H2O)
          )
 
     ! BUG(wjs, 2019-07-12, ESCOMP/ctsm#762) This is needed so that we can test the
