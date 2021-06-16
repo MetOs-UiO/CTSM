@@ -23,6 +23,12 @@ module BareGroundFluxesMod
   use LandunitType         , only : lun                
   use ColumnType           , only : col                
   use PatchType            , only : patch                
+  
+  use EDPftvarcon          , only : EDPftvarcon_inst
+  use GridcellType          , only : grc                
+  use CLMFatesInterfaceMod, only : hlm_fates_interface_type
+    use CanopyStateType       , only : canopystate_type
+  
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -36,6 +42,7 @@ module BareGroundFluxesMod
       real(r8) :: a_coef   ! Drag coefficient under less dense canopy (unitless)
       real(r8) :: a_exp    ! Drag exponent under less dense canopy (unitless)
       real(r8) :: wind_min ! Minimum wind speed at the atmospheric forcing height (m/s)
+      real(r8) :: cv       ! Turbulent transfer coeff. between canopy surface and canopy air (m/s^(1/2))
   end type params_type
   type(params_type), private ::  params_inst
   !------------------------------------------------------------------------------
@@ -63,12 +70,15 @@ contains
     call readNcdioScalar(ncid, 'a_exp', subname, params_inst%a_exp)
     ! Minimum wind speed at the atmospheric forcing height (m/s)
     call readNcdioScalar(ncid, 'wind_min', subname, params_inst%wind_min)
+    ! Turbulent transfer coeff between canopy surface and canopy air (m/s^(1/2))
+    call readNcdioScalar(ncid, 'cv', subname, params_inst%cv)
+
 
    end subroutine readParams
 
   !------------------------------------------------------------------------------
   subroutine BareGroundFluxes(bounds, num_noexposedvegp, filter_noexposedvegp, &
-       atm2lnd_inst, soilstate_inst, &
+       clm_fates, nc, atm2lnd_inst, canopystate_inst, soilstate_inst, &
        frictionvel_inst, ch4_inst, energyflux_inst, temperature_inst, &
        waterfluxbulk_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
        wateratm2lndbulk_inst, photosyns_inst, humanindex_inst)
@@ -95,7 +105,10 @@ contains
     integer                , intent(in)    :: num_noexposedvegp       ! number of points in filter_noexposedvegp
     integer                , intent(in)    :: filter_noexposedvegp(:) ! patch filter where frac_veg_nosno is 0 
                                                                       ! (but does NOT include lake or urban)
+    type(hlm_fates_interface_type)         , intent(inout)         :: clm_fates
+    integer                                , intent(in)            :: nc ! clump index
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
+    type(canopystate_type) , intent(inout)    :: canopystate_inst
     type(soilstate_type)   , intent(inout) :: soilstate_inst
     type(frictionvel_type) , intent(inout) :: frictionvel_inst
     type(ch4_type)         , intent(inout) :: ch4_inst
@@ -145,14 +158,32 @@ contains
     real(r8) :: qsat_ref2m                       ! 2 m height surface saturated specific humidity [kg/kg]
     real(r8) :: dqsat2mdT                        ! derivative of 2 m height surface saturated specific humidity on t_ref2m 
     real(r8) :: www                              ! surface soil wetness [-]
+    
+    real(r8) :: svpts(bounds%begp:bounds%endp)   ! Hui: saturation vapor pressure at t_veg (pa)
+    real(r8) :: eah(bounds%begp:bounds%endp)     ! Hui: canopy air vapor pressure (pa)
+    real(r8) :: qaf(bounds%begp:bounds%endp)     ! Hui: humidity of canopy air [kg/kg]
+    real(r8) :: o2(bounds%begp:bounds%endp)      ! Hui: atmospheric o2 partial pressure (pa)
+    real(r8) :: co2(bounds%begp:bounds%endp)     ! Hui: atmospheric co2 partial pressure (pa)
+    real(r8) :: uaf(bounds%begp:bounds%endp)         ! velocity of air within foliage [m/s]
+    real(r8) :: cf                                   ! heat transfer coefficient from leaves [-]
+    real(r8) :: rb(bounds%begp:bounds%endp)          ! leaf boundary layer resistance [s/m]
+    real(r8) :: dayl_factor(bounds%begp:bounds%endp) ! scalar (0-1) for daylength effect on Vcmax
+    
     !------------------------------------------------------------------------------
 
     associate(                                                                       & 
          soilresis              => soilstate_inst%soilresis_col                 , & ! Input:  [real(r8) (:,:) ]  evaporative soil resistance (s/m)                                                     
          snl                    => col%snl                                      , & ! Input:  [integer  (:)   ]  number of snow layers                                                  
          dz                     => col%dz                                       , & ! Input:  [real(r8) (:,:) ]  layer depth (m)                                                     
-         zii                    => col%zii                                      , & ! Input:  [real(r8) (:)   ]  convective boundary height [m]                                        
-
+         zii                    => col%zii                                      , & ! Input:  [real(r8) (:)   ]  convective boundary height [m]        
+                                         
+         dleaf_patch            => canopystate_inst%dleaf_patch                 , & ! Hui: Output: [real(r8) (:)   ]  mean leaf diameter for this patch/pft
+         dayl                 => grc%dayl                                  , & ! Input:  [real(r8) (:)   ]  daylength (s)
+         max_dayl             => grc%max_dayl                              , & ! Input:  [real(r8) (:)   ]  maximum daylength for this grid cell (s)
+         forc_q                 => wateratm2lndbulk_inst%forc_q_downscaled_col           , & ! Input:  [real(r8) (:)   ]  atmospheric specific humidity (kg/kg)                                 
+         forc_po2               => atm2lnd_inst%forc_po2_grc                    , & ! Input:  [real(r8) (:)   ]  partial pressure o2 (Pa)  
+         forc_pco2              => atm2lnd_inst%forc_pco2_grc                   , & ! Input:  [real(r8) (:)   ]  partial pressure co2 (Pa)
+         
          tc_ref2m               => humanindex_inst%tc_ref2m_patch               , & ! Output: [real(r8) (:)   ]  2 m height surface air temperature (C)
          vap_ref2m              => humanindex_inst%vap_ref2m_patch              , & ! Output: [real(r8) (:)   ]  2 m height vapor pressure (Pa)
          appar_temp_ref2m       => humanindex_inst%appar_temp_ref2m_patch       , & ! Output: [real(r8) (:)   ]  2 m apparent temperature (C)
@@ -189,9 +220,8 @@ contains
          forc_th                => atm2lnd_inst%forc_th_downscaled_col          , & ! Input:  [real(r8) (:)   ]  atmospheric potential temperature (Kelvin)                            
          forc_t                 => atm2lnd_inst%forc_t_downscaled_col           , & ! Input:  [real(r8) (:)   ]  atmospheric temperature (Kelvin) 
          forc_pbot              => atm2lnd_inst%forc_pbot_downscaled_col        , & ! Input:  [real(r8) (:)   ]  atmospheric pressure (Pa)                                             
-         forc_rho               => atm2lnd_inst%forc_rho_downscaled_col         , & ! Input:  [real(r8) (:)   ]  density (kg/m**3)                                                     
-         forc_q                 => wateratm2lndbulk_inst%forc_q_downscaled_col           , & ! Input:  [real(r8) (:)   ]  atmospheric specific humidity (kg/kg)                                 
-
+         forc_rho               => atm2lnd_inst%forc_rho_downscaled_col         , & ! Input:  [real(r8) (:)   ]  density (kg/m**3)                                                   
+         
          watsat                 => soilstate_inst%watsat_col                    , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation (porosity)                      
          soilbeta               => soilstate_inst%soilbeta_col                  , & ! Input:  [real(r8) (:)   ]  soil wetness relative to field capacity                               
          rootr                  => soilstate_inst%rootr_patch                   , & ! Output: [real(r8) (:,:) ]  effective fraction of roots in each soil layer (SMS method only)
@@ -343,6 +373,8 @@ contains
          end do
 
       end do ! end stability iteration
+      
+!      rb(begp:endp) = 0._r8
 
       do f = 1, num_noexposedvegp
          p = filter_noexposedvegp(f)
@@ -359,6 +391,26 @@ contains
          if (use_lch4) then
             grnd_ch4_cond(p) = 1._r8/raw
          end if
+
+!        BHui: need by photosynthesis
+        ! Bulk boundary layer resistance of leaves
+
+!         uaf(p) = um(p)*sqrt( 1._r8/(ram*um(p)) )
+
+        ! Use pft parameter for leaf characteristic width
+        ! dleaf_patch if this is not an fates patch.
+        ! Otherwise, the value has already been loaded
+        ! during the FATES dynamics call
+        
+        ! Hui: assuming only moss and lichen has dleaf value, only moss and lichen need rb  
+!            if(.not.patch%is_fates(p)) then  
+!               dleaf_patch(p) = dleaf(patch%itype(p))
+!            end if
+!        if ( EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 3 .or. EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 4 ) then ! moss or lichen  
+!            cf  = params_inst%cv / (sqrt(uaf(p)) * sqrt(dleaf_patch(p)))
+!            rb(p)  = 1._r8/(cf*uaf(p))
+!        end if 
+        ! EHUI: needed for photosynthesis
 
          ! Soil evaporation resistance
          www = (h2osoi_liq(c,1)/denh2o+h2osoi_ice(c,1)/denice)/dz(c,1)/watsat(c,1)
@@ -385,7 +437,6 @@ contains
          cgrnds(p) = raih
          cgrndl(p) = raiw*dqgdT(c)
          cgrnd(p)  = cgrnds(p) + htvp(c)*cgrndl(p)
-
 
          ! Variables needed by history tape
 
@@ -427,7 +478,7 @@ contains
             rh_ref2m_r(p) = rh_ref2m(p)
             t_ref2m_r(p) = t_ref2m(p)
          end if
-
+                  
          ! Human Heat Stress
          if ( all_human_stress_indices .or. fast_human_stress_indices ) then
             call KtoC(t_ref2m(p), tc_ref2m(p))
@@ -464,9 +515,30 @@ contains
                  swmp65_ref2m_r(p)         = swmp65_ref2m(p)
               end if
             end if
-
          end if
+         
+         ! Hui: set variables for photosynthesis 
+!         if ( EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 3 .or. EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 4 ) then
+!            svpts(p) = qg_soil(c)     ! pa
+            
+!            qaf(p) = (forc_q(c)+qg(c))/2._r8
+!            eah(p) = forc_pbot(c) * qaf(p) / 0.622_r8   ! pa
+            
+!            o2(p)  = forc_po2(g)
+!            co2(p) = forc_pco2(g)
+            
+!            dayl_factor(p)=min(1._r8,max(0.01_r8,(dayl(g)*dayl(g))/(max_dayl(g)*max_dayl(g))))
+!         end if
+         
       end do
+
+      ! Hui: if consider moss and lichen as soil, the photosynthesis will have to be called in baregroundfluxes instead of canopyflux. 
+      ! Hui: Need a dedicated wrapper for moss&lichen photosynthesis!!!
+!      call clm_fates%wrap_photosynthesis(nc, bounds, num_noexposedvegp, filter_noexposedvegp(1:num_noexposedvegp), &
+!           svpts(begp:endp), eah(begp:endp), o2(begp:endp), &
+!           co2(begp:endp), rb(begp:endp), dayl_factor(begp:endp), &
+!           atm2lnd_inst, temperature_inst, canopystate_inst, photosyns_inst)
+!       print *, "bareground_photosynthesis"
 
     end associate
 
