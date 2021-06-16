@@ -1612,7 +1612,7 @@ module CLMFatesInterfaceMod
 
    ! ======================================================================================
    
-   subroutine wrap_sunfrac(this,nc,atm2lnd_inst,canopystate_inst)
+   subroutine wrap_sunfrac(this,nc,atm2lnd_inst,canopystate_inst,surfalb_inst)
          
       ! ---------------------------------------------------------------------------------
       ! This interface function is a wrapper call on ED_SunShadeFracs. The only
@@ -1629,6 +1629,7 @@ module CLMFatesInterfaceMod
       
       ! direct and diffuse downwelling radiation (W/m2)
       type(atm2lnd_type),intent(in)        :: atm2lnd_inst
+      type(surfalb_type),intent(in)        :: surfalb_inst
       
       ! Input/Output Arguments to CLM
       type(canopystate_type),intent(inout) :: canopystate_inst
@@ -1650,6 +1651,8 @@ module CLMFatesInterfaceMod
 
       associate( forc_solad => atm2lnd_inst%forc_solad_grc, &
                  forc_solai => atm2lnd_inst%forc_solai_grc, &
+                 flx_absdv  =>    surfalb_inst%flx_absdv_col        , & ! Hui: Input:  [real(r8) (:,:) ] direct flux absorption factor (col,lyr): VIS [frc]
+                 flx_absiv  =>    surfalb_inst%flx_absiv_col        , & ! Hui: Input:  [real(r8) (:,:) ] diffuse flux absorption factor (col,lyr): VIS [frc]
                  fsun       => canopystate_inst%fsun_patch, &
                  laisun     => canopystate_inst%laisun_patch, &               
                  laisha     => canopystate_inst%laisha_patch )
@@ -1666,6 +1669,8 @@ module CLMFatesInterfaceMod
            do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
               this%fates(nc)%bc_in(s)%solad_parb(ifp,:) = forc_solad(g,:)
               this%fates(nc)%bc_in(s)%solai_parb(ifp,:) = forc_solai(g,:)
+              this%fates(nc)%bc_in(s)%flx_absdv(ifp)  = flx_absdv(c,1)
+              this%fates(nc)%bc_in(s)%flx_absiv(ifp)  = flx_absiv(c,1)
            end do
         end do
 
@@ -1701,6 +1706,7 @@ module CLMFatesInterfaceMod
      call t_stopf('fates_wrapsunfrac')
 
    end subroutine wrap_sunfrac
+      
    
    ! ===================================================================================
 
