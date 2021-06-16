@@ -640,7 +640,7 @@ contains
 
        call BareGroundFluxes(bounds_clump,                                 &
             filter(nc)%num_noexposedvegp, filter(nc)%noexposedvegp,          &
-            atm2lnd_inst, soilstate_inst,                &
+            clm_fates, nc, atm2lnd_inst, canopystate_inst, soilstate_inst,                &
             frictionvel_inst, ch4_inst, energyflux_inst, temperature_inst, &
             water_inst%waterfluxbulk_inst, water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, water_inst%wateratm2lndbulk_inst, &
