@@ -374,6 +374,7 @@ module clm_varctl
   logical, public :: use_vancouver       = .false.
   logical, public :: use_mexicocity      = .false.
   logical, public :: use_noio            = .false.
+  logical, public :: use_mosslichen      = .true. !
 
   logical, public :: use_nguardrail      = .false.
 
