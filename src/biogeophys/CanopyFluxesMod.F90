@@ -877,7 +877,7 @@ contains
             print *, "check2=", EDPftvarcon_inst%stomatal_model(patch%itype(p))
             if ( EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 3 .or. EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 4 ) then ! moss or lichen  
                print *, "moss or lichen 0"          
-               ricsoilc= params_inst%csoilc * fwet(p)          ! even smaller than 0.004.
+               ricsoilc= params_inst%csoilc    !* fwet(p)          ! even smaller than 0.004.
 !               csoilcn = csoilb*w + ricsoilc*(1._r8-w)
                csoilcn = ricsoilc
 !               print *, "csoilcn=", csoilcn
@@ -1372,7 +1372,7 @@ contains
          cgrnd(p)  = cgrnds(p) + cgrndl(p)*htvp(c)
 
          ! Update dew accumulation (kg/m2)
-      if ( EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 1 .or. EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 2 ) then ! only non -moss or -lichen, do an update
+!      if ( EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 1 .or. EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 2 ) then ! only non -moss or -lichen, do an update
          if (t_veg(p) > tfrz ) then ! above freezing, update accumulation in liqcan
             if ((qflx_evap_veg(p)-qflx_tran_veg(p))*dtime > liqcan(p)) then ! all liq evap
                ! In this case, all liqcan will evap. Take remainder from snocan
@@ -1388,8 +1388,9 @@ contains
             snocan(p) = max(0._r8,snocan(p)+(qflx_tran_veg(p)-qflx_evap_veg(p))*dtime)
          end if 
          print *, "test_mosslichen1"                
-      end do
-      
+ !     end if
+      end do     
+ 
       if ( use_fates ) then
          
          
