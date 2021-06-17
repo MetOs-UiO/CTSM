@@ -718,8 +718,8 @@ contains
          p = filterp(f)
          c = patch%column(p)
          
-         elai(p)=0.01
-         esai(p)=0.01         
+!       elai(p)=0.01
+!       esai(p)=0.01
 
          lt = min(elai(p)+esai(p), tlsai_crit)
          egvf =(1._r8 - alpha_aero * exp(-lt)) / (1._r8 - alpha_aero * exp(-tlsai_crit))
