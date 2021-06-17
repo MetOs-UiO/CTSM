@@ -563,7 +563,7 @@ contains
              albsfc_nv(c,ib)  = albsfc_nv(c,ib) + albi(p,ib) * patch%wtcol(p)
              albsfc_nv_d(c,ib)  = albsfc_nv_d(c,ib) + albd(p,ib) * patch%wtcol(p)
              wtcol_nv(c,ib) = wtcol_nv(c,ib)+patch%wtcol(p)
-             print *, "test_rad2: albi, wtcol=", albi(p,ib), patch%wtcol(p)
+             print *, "test_rad2: albi, wtcol=", albi(p,ib), patch%wtcol(p),albd(p,ib)
           end do
        end do
        print *, "test_rad3: albsfc_nv, wtcol_nv=", albsfc_nv(:,:), wtcol_nv(:,:)
@@ -573,7 +573,7 @@ contains
           albsfc(c,:)     = albsoi(c,:)*(1-wtcol_nv(c,:))+albsfc_nv(c,:)        ! Weighted average of moss/lichen albedo and soil albedo
           albsfc_d(c,:)   = albsod(c,:)*(1-wtcol_nv(c,:))+albsfc_nv_d(c,:)
        end do
-       print *, "test_rad4: albsoi, albsfc=", albsoi(:,:), albsfc(:,:)
+       print *, "test_rad4: albsoi, albsfc=", albsoi(:,:), albsfc(:,:), albsod(:,:), albsfc_d(:,:)
 
        do c=bounds%begc,bounds%endc
          albsoi(c,:)=albsfc(c,:) 
