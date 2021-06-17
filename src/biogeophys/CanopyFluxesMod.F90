@@ -721,7 +721,8 @@ contains
 !       elai(p)=0.01
 !       esai(p)=0.01
 
-         lt = min(elai(p)+esai(p), tlsai_crit)
+!         lt = min(elai(p)+esai(p), tlsai_crit)
+         lt=0.01
          egvf =(1._r8 - alpha_aero * exp(-lt)) / (1._r8 - alpha_aero * exp(-tlsai_crit))
          displa(p) = egvf * displa(p)
          z0mv(p)   = exp(egvf * log(z0mv(p)) + (1._r8 - egvf) * log(z0mg(c)))
@@ -857,8 +858,8 @@ contains
             ! Parameterization for variation of csoilc with canopy density from
             ! X. Zeng, University of Arizona
 
-            w = exp(-(elai(p)+esai(p)))
-
+            !w = exp(-(elai(p)+esai(p)))
+            w = exp(-(0.01))
             ! changed by K.Sakaguchi from here
             ! transfer coefficient over bare soil is changed to a local variable
             ! just for readability of the code (from line 680)
@@ -973,7 +974,8 @@ contains
             ! Moved the original subroutine in-line...
 
             wta    = 1._r8/rah(p,1)             ! air
-            wtl    = (elai(p)+esai(p))/rb(p)    ! leaf
+            !wtl    = (elai(p)+esai(p))/rb(p)    ! leaf
+            wtl    = (0.01)/rb(p)    ! leaf
             wtg(p) = 1._r8/rah(p,2)             ! ground
             wtshi  = 1._r8/(wta+wtl+wtg(p))
 
@@ -1001,7 +1003,8 @@ contains
             
             ! Calculate canopy conductance for methane / oxygen (e.g. stomatal conductance & leaf bdy cond)
             if (use_lch4) then
-               canopy_cond(p) = (laisun(p)/(rb(p)+rssun(p)) + laisha(p)/(rb(p)+rssha(p)))/max(elai(p), 0.01_r8)
+               !canopy_cond(p) = (laisun(p)/(rb(p)+rssun(p)) + laisha(p)/(rb(p)+rssha(p)))/max(elai(p), 0.01_r8)
+               canopy_cond(p) = (laisun(p)/(rb(p)+rssun(p)) + laisha(p)/(rb(p)+rssha(p)))/max(0.01, 0.01_r8)
             end if
 
             efpot = forc_rho(c)*wtl*(qsatl(p)-qaf(p))
@@ -1048,8 +1051,8 @@ contains
             ! Moved the original subroutine in-line...
 
             wtaq    = frac_veg_nosno(p)/raw(p,1)                        ! air
-            wtlq    = frac_veg_nosno(p)*(elai(p)+esai(p))/rb(p) * rpp   ! leaf
-
+            !wtlq    = frac_veg_nosno(p)*(elai(p)+esai(p))/rb(p) * rpp   ! leaf
+            wtlq    = frac_veg_nosno(p)*(0.01)/rb(p) * rpp
             !Litter layer resistance. Added by K.Sakaguchi
             snow_depth_c = params_inst%z_dl ! critical depth for 100% litter burial by snow (=litter thickness)
             fsno_dl = snow_depth(c)/snow_depth_c    ! effective snow cover for (dry)plant litter
