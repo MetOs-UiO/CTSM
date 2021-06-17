@@ -877,7 +877,7 @@ contains
             print *, "check2=", EDPftvarcon_inst%stomatal_model(patch%itype(p))
             if ( EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 3 .or. EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 4 ) then ! moss or lichen  
                print *, "moss or lichen 0"          
-               ricsoilc= params_inst%csoilc * fwet(p)          ! even smaller than 0.004.
+               ricsoilc= params_inst%csoilc    !* fwet(p)          ! even smaller than 0.004.
 !               csoilcn = csoilb*w + ricsoilc*(1._r8-w)
                csoilcn = ricsoilc
 !               print *, "csoilcn=", csoilcn
