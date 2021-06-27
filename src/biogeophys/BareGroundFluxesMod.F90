@@ -23,7 +23,7 @@ module BareGroundFluxesMod
   use LandunitType         , only : lun                
   use ColumnType           , only : col                
   use PatchType            , only : patch                
-  
+  use clm_varctl        , only : use_mosslichen_soil_photosyn
   use EDPftvarcon          , only : EDPftvarcon_inst
   use GridcellType          , only : grc                
   use CLMFatesInterfaceMod, only : hlm_fates_interface_type
@@ -392,10 +392,10 @@ contains
             grnd_ch4_cond(p) = 1._r8/raw
          end if
 
-!        BHui: need by photosynthesis
-        ! Bulk boundary layer resistance of leaves
-
-!         uaf(p) = um(p)*sqrt( 1._r8/(ram*um(p)) )
+!        if(use_mosslichen_soil_photosyn .eq. 3) then
+!          BHui: need by photosynthesis
+!          Bulk boundary layer resistance of leaves
+!          uaf(p) = um(p)*sqrt( 1._r8/(ram*um(p)) )
 
         ! Use pft parameter for leaf characteristic width
         ! dleaf_patch if this is not an fates patch.
@@ -410,6 +410,7 @@ contains
 !            cf  = params_inst%cv / (sqrt(uaf(p)) * sqrt(dleaf_patch(p)))
 !            rb(p)  = 1._r8/(cf*uaf(p))
 !        end if 
+!        end if
         ! EHUI: needed for photosynthesis
 
          ! Soil evaporation resistance
@@ -518,6 +519,7 @@ contains
          end if
          
          ! Hui: set variables for photosynthesis 
+!        if(use_mosslichen_soil_photosyn .eq. 3) then
 !         if ( EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 3 .or. EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 4 ) then
 !            svpts(p) = qg_soil(c)     ! pa
             
@@ -528,18 +530,20 @@ contains
 !            co2(p) = forc_pco2(g)
             
 !            dayl_factor(p)=min(1._r8,max(0.01_r8,(dayl(g)*dayl(g))/(max_dayl(g)*max_dayl(g))))
+!          end if
 !         end if
          
       end do
 
-      ! Hui: if consider moss and lichen as soil, the photosynthesis will have to be called in baregroundfluxes instead of canopyflux. 
-      ! Hui: Need a dedicated wrapper for moss&lichen photosynthesis!!!
+!     if(use_mosslichen_soil_photosyn .eq. 3) then
+!     Hui: if consider moss and lichen as soil, the photosynthesis will have to be called in baregroundfluxes instead of canopyflux. 
+!     Hui: Need a dedicated wrapper for moss&lichen photosynthesis!!!
 !      call clm_fates%wrap_photosynthesis(nc, bounds, num_noexposedvegp, filter_noexposedvegp(1:num_noexposedvegp), &
 !           svpts(begp:endp), eah(begp:endp), o2(begp:endp), &
 !           co2(begp:endp), rb(begp:endp), dayl_factor(begp:endp), &
 !           atm2lnd_inst, temperature_inst, canopystate_inst, photosyns_inst)
 !       print *, "bareground_photosynthesis"
-
+!     end if
     end associate
 
   end subroutine BareGroundFluxes
