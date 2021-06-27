@@ -62,6 +62,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_fates_sp
    use clm_varctl        , only : fates_inventory_ctrl_filename
    use clm_varctl        , only : use_nitrif_denitrif
+   use clm_varctl        , only : use_mosslichen, use_mosslichen_undersnow, use_mosslichen_photosyn
    use clm_varcon        , only : tfrz
    use clm_varcon        , only : spval 
    use clm_varcon        , only : denice
@@ -273,6 +274,9 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_biogeog 
      integer                                        :: pass_nocomp
      integer                                        :: pass_sp
+     integer                                        :: pass_mosslichen
+     integer                                        :: pass_mosslichen_undersnow
+     integer                                        :: pass_mosslichen_photosyn
 
      call t_startf('fates_globals')
 
@@ -348,18 +352,33 @@ module CLMFatesInterfaceMod
 
         if(use_fates_nocomp)then
            pass_nocomp = 1
-	   else
+	      else
            pass_nocomp = 0
-	   end if
+	      end if
         call set_fates_ctrlparms('use_nocomp',ival=pass_nocomp)
 
         if(use_fates_sp)then
            pass_sp = 1
-              else
+        else
            pass_sp = 0
-              end if
+        end if
         call set_fates_ctrlparms('use_sp',ival=pass_sp)
 
+        if(use_mosslichen)then
+           pass_mosslichen = 1
+        else
+           pass_mosslichen = 0
+        end if
+        call set_fates_ctrlparms('use_mosslichen',ival=pass_mosslichen)
+        
+        if(use_mosslichen_undersnow)then
+           pass_mosslichen_undersnow = 1
+        else
+           pass_mosslichen_undersnow = 0
+        end if
+        call set_fates_ctrlparms('use_mosslichen_undersnow',ival=pass_mosslichen_undersnow)
+        
+        call set_fates_ctrlparms('use_mosslichen_photosyn',ival=use_mosslichen_photosyn)
 
         if(use_fates_ed_st3) then
            pass_ed_st3 = 1
