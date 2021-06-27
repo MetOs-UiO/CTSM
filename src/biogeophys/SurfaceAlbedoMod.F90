@@ -14,7 +14,7 @@ module SurfaceAlbedoMod
   use landunit_varcon   , only : istsoil, istcrop, istdlak
   use clm_varcon        , only : grlnd, namep
   use clm_varpar        , only : numrad, nlevcan, nlevsno, nlevcan
-  use clm_varctl        , only : fsurdat, iulog, use_snicar_frc, use_SSRE
+  use clm_varctl        , only : fsurdat, iulog, use_snicar_frc, use_SSRE, use_mosslichen_undersnow
   use pftconMod         , only : pftcon
   use SnowSnicarMod     , only : sno_nbr_aer, SNICAR_RT, DO_SNO_AER, DO_SNO_OC
   use AerosolMod        , only : aerosol_type
@@ -492,12 +492,13 @@ contains
     
 ! Create solar-vegetated filter for the following calculations
 ! Hui: This part needs to be moved here
-    num_vegsol  = 0
-    num_novegsol= 0
-    num_nvsol   = 0
-    num_nonvsol = 0
-    do fp = 1,num_nourbanp
-       p = filter_nourbanp(fp)
+!    if(use_mosslichen_undersnow)then
+       num_vegsol  = 0
+       num_novegsol= 0
+       num_nvsol   = 0
+       num_nonvsol = 0
+       do fp = 1,num_nourbanp
+          p = filter_nourbanp(fp)
           if (coszen_patch(p) > 0._r8) then
              if ((lun%itype(patch%landunit(p)) == istsoil .or.  &
                   lun%itype(patch%landunit(p)) == istcrop     ) &
@@ -517,8 +518,8 @@ contains
 !                end if
              end if
           end if
-    end do
-    
+      end do
+!    end if
 
     call SoilAlbedo(bounds, &
          num_nourbanc, filter_nourbanc, &
@@ -538,14 +539,15 @@ contains
 !        3. how to recognize moss and lichen patch for calculation: this is done in fates not here. (But it is also needed to have mosslichen filter in CLM too.)
 !        4. how to calculate radiation absorption: wrap_sunfrac need to be modified
 
-    if (use_fates) then
-       call clm_fates%wrap_mosslichen_radiation(bounds, nc, &
+    if(use_mosslichen_undersnow)then
+      if (use_fates) then
+        call clm_fates%wrap_mosslichen_radiation(bounds, nc, &
                  num_vegsol, filter_vegsol, &
                  coszen_patch(bounds%begp:bounds%endp), surfalb_inst)
+      end if
 
 !Hui: should do filter here, to recognize patches covered by moss and lichen to have different treatment.
 !     FATES can not handle the patches without moss and lichen
-       
        do c=bounds%begc,bounds%endc
            albsfc_nv(c,:)     = 0                   ! create a new variable to keep moss and lichen albedo for column
            albsfc_nv_d(c,:)     = 0 
@@ -584,9 +586,8 @@ contains
           albsfc(c,:)     = albsoi(c,:)
       end do
     end if
-    
     ! call clm_fates%wrap_mosslichen_albedo()
-     
+    
     ! set variables to pass to SNICAR.
     flg_snw_ice = 1   ! calling from CLM, not CSIM
     do c=bounds%begc,bounds%endc
