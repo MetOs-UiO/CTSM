@@ -14,7 +14,7 @@ module CanopyFluxesMod
   use shr_log_mod           , only : errMsg => shr_log_errMsg
   use abortutils            , only : endrun
   use clm_varctl            , only : iulog, use_cn, use_lch4, use_c13, use_c14, use_cndv, use_fates, &
-                                     use_luna, use_hydrstress, use_mosslichen_veg, use_mosslichen_veg_tgtv, use_mosslichen_soil_canopy_lowlai
+                                     use_luna, use_hydrstress, use_mosslichen_veg, use_mosslichen_veg_tgtv, use_mosslichen_soil_photosyn
   use clm_varpar            , only : nlevgrnd, nlevsno
   use clm_varcon            , only : namep 
   use pftconMod             , only : pftcon
@@ -718,10 +718,10 @@ contains
          p = filterp(f)
          c = patch%column(p)
          
-         if (use_mosslichen_veg) then
+         if (use_mosslichen_veg .or. (use_mosslichen_soil .and. use_mosslichen_soil_photosyn==0)) then
            lt = min(elai(p)+esai(p), tlsai_crit)
          else
-           if (use_mosslichen_soil_canopy_lowlai) then
+           if (use_mosslichen_soil_photosyn==1) then
               lt=0.01
            end if
          end if
@@ -861,10 +861,10 @@ contains
             ! Parameterization for variation of csoilc with canopy density from
             ! X. Zeng, University of Arizona
           
-            if (use_mosslichen_veg) then
+            if (use_mosslichen_veg .or. (use_mosslichen_soil .and. use_mosslichen_soil_photosyn==0)) then
               w = exp(-(elai(p)+esai(p)))
             else
-              if (use_mosslichen_soil_canopy_lowlai) then
+              if (use_mosslichen_soil_photosyn == 1) then
                 w = exp(-(0.01))
               end if
             end if
@@ -995,10 +995,10 @@ contains
             ! Moved the original subroutine in-line...
 
             wta    = 1._r8/rah(p,1)             ! air
-            if (use_mosslichen_veg) then
+            if (use_mosslichen_veg .or. (use_mosslichen_soil .and. use_mosslichen_soil_photosyn==0)) then
               wtl    = (elai(p)+esai(p))/rb(p)    ! leaf
             else
-              if (use_mosslichen_soil_canopy_lowlai) then
+              if (use_mosslichen_soil_photosyn == 1) then
                  wtl    = (0.01)/rb(p)    ! leaf
               end if
             end if
@@ -1030,10 +1030,10 @@ contains
             
             ! Calculate canopy conductance for methane / oxygen (e.g. stomatal conductance & leaf bdy cond)
             if (use_lch4)    then
-               if (use_mosslichen_veg) then
+               if (use_mosslichen_veg .or. (use_mosslichen_soil .and. use_mosslichen_soil_photosyn==0)) then
                   canopy_cond(p) = (laisun(p)/(rb(p)+rssun(p)) + laisha(p)/(rb(p)+rssha(p)))/max(elai(p), 0.01_r8)
                else
-                  if (use_mosslichen_soil_canopy_lowlai) then
+                  if (use_mosslichen_soil_photosyn == 1) then
                      canopy_cond(p) = (laisun(p)/(rb(p)+rssun(p)) + laisha(p)/(rb(p)+rssha(p)))/max(0.01, 0.01_r8)
                   end if
                end if
@@ -1083,10 +1083,10 @@ contains
             ! Moved the original subroutine in-line...
 
             wtaq    = frac_veg_nosno(p)/raw(p,1)                        ! air
-            if (use_mosslichen_veg) then
+            if (use_mosslichen_veg .or. (use_mosslichen_soil .and. use_mosslichen_soil_photosyn==0)) then
               wtlq    = frac_veg_nosno(p)*(elai(p)+esai(p))/rb(p) * rpp   ! leaf
             else
-              if (use_mosslichen_soil_canopy_lowlai) then
+              if (use_mosslichen_soil_photosyn==1) then
                  wtlq    = frac_veg_nosno(p)*(0.01)/rb(p) * rpp
               end if
             end if
