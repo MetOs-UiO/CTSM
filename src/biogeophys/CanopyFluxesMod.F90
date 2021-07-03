@@ -14,7 +14,7 @@ module CanopyFluxesMod
   use shr_log_mod           , only : errMsg => shr_log_errMsg
   use abortutils            , only : endrun
   use clm_varctl            , only : iulog, use_cn, use_lch4, use_c13, use_c14, use_cndv, use_fates, &
-                                     use_luna, use_hydrstress, use_mosslichen_veg, use_mosslichen_veg_tgtv, use_mosslichen_soil_photosyn
+                                     use_luna, use_hydrstress, use_mosslichen_veg, use_mosslichen_veg_tgtv, use_mosslichen_soil, use_mosslichen_soil_photosyn
   use clm_varpar            , only : nlevgrnd, nlevsno
   use clm_varcon            , only : namep 
   use pftconMod             , only : pftcon
