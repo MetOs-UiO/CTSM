@@ -704,7 +704,7 @@ contains
               write(iulog,*)'ftii ftdd ftid = ' ,ftii(indexp,:), ftdd(indexp,:),ftid(indexp,:)
               write(iulog,*)'elai esai = '      ,elai(indexp),   esai(indexp)
               write(iulog,*)'clm model is stopping'
-              call endrun(decomp_index=indexp, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
+!              call endrun(decomp_index=indexp, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
            end if
 
        end if
