@@ -256,6 +256,7 @@ module clm_varctl
                                                              ! 2: use top 1-2 soil layers for moss and lichen (not implemented yet)
                                                              ! 3: use top 1-3 soil layers for moss and lichen (not implemented yet)
   integer, public :: use_mosslichen_soil_photosyn = 1        ! How photosynthesis is treated when moss and lichen are treated as soil layer
+                                                             ! 0: photosynthesis is still calculated in CanopyFluxesMod, as normal vegetation
                                                              ! 1: photosynthesis is still calculated in CanopyFluxesMod, assume assume elai+esai = 0.01
                                                              ! 2: photosynthesis is still calculated in CanopyFluxesMod, assume TV (moss)=TG (not implemented, might not work)
                                                              ! 3: photosynthesis is called in a different module (e.g., BareGroundFluxesMod) instead of CanopyFluxesMod.
