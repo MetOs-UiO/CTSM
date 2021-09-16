@@ -468,7 +468,7 @@ contains
               end if
               
               write(iulog,*)'clm model is stopping'
-              call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
+             ! call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
          end if
        
        end if
