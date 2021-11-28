@@ -172,7 +172,13 @@ contains
     this%som_adv_coef_col(begc:endc,:) = spval
     call hist_addfld_decomp (fname='SOM_ADV_COEF', units='m/s',  type2d='levdcmp', &
          avgflag='A', long_name='advection term for vertical SOM translocation', &
-         ptr_col=this%som_adv_coef_col, default='inactive')
+         ptr_col=this%som_adv_coef_col, default='active')
+
+    this%rf_decomp_cascade_col(begc:endc,:,:) = spval
+    call hist_addfld_decomp (fname='RF_DECOMP_CASCADE', units='-',  type2d='levdcmp', &
+         avgflag='A', long_name='respiration fraction', &
+         ptr_col=this%rf_decomp_cascade_col, default='active')
+
 
     this%som_diffus_coef_col(begc:endc,:) = spval
     call hist_addfld_decomp (fname='SOM_DIFFUS_COEF', units='m^2/s',  type2d='levdcmp', &
