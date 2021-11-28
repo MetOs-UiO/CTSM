@@ -264,6 +264,7 @@ contains
 
     associate(                                                                                        &
          rf_decomp_cascade              =>    soilbiogeochem_state_inst%rf_decomp_cascade_col       , & ! Output:  [real(r8)           (:,:,:) ]  respired fraction in decomposition step (frac)       
+         docf_decomp_cascade            =>    soilbiogeochem_state_inst%docf_decomp_cascade_col       , & ! Output:  [real(r8)           (:,:,:) ]  respired fraction in decomposition step (frac)       
          pathfrac_decomp_cascade        =>    soilbiogeochem_state_inst%pathfrac_decomp_cascade_col , & ! Output:  [real(r8)           (:,:,:) ]  what fraction of C leaving a given pool passes through a given transition (frac)
          
          cascade_donor_pool             =>    decomp_cascade_con%cascade_donor_pool                 , & ! Output:   [integer           (:)     ]  which pool is C taken from for a given decomposition step 
@@ -470,6 +471,7 @@ contains
       i_l1s1 = 1
       decomp_cascade_con%cascade_step_name(i_l1s1) = 'L1S1'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1s1) = rf_l1s1
+      docf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1s1) = rf_l1s1
       cascade_donor_pool(i_l1s1) = i_litr1
       cascade_receiver_pool(i_l1s1) = i_soil1
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1s1) = 1.0_r8
@@ -477,6 +479,7 @@ contains
       i_l2s2 = 2
       decomp_cascade_con%cascade_step_name(i_l2s2) = 'L2S2'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2s2) = rf_l2s2
+      docf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2s2) = rf_l2s2
       cascade_donor_pool(i_l2s2) = i_litr2
       cascade_receiver_pool(i_l2s2) = i_soil2
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2s2) = 1.0_r8
@@ -484,6 +487,7 @@ contains
       i_l3s3 = 3
       decomp_cascade_con%cascade_step_name(i_l3s3) = 'L3S3'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l3s3) = rf_l3s3
+      docf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l3s3) = rf_l3s3
       cascade_donor_pool(i_l3s3) = i_litr3
       cascade_receiver_pool(i_l3s3) = i_soil3
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l3s3) = 1.0_r8
@@ -491,6 +495,7 @@ contains
       i_s1s2 = 4
       decomp_cascade_con%cascade_step_name(i_s1s2) = 'S1S2'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s2) = rf_s1s2
+      docf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s2) = rf_s1s2
       cascade_donor_pool(i_s1s2) = i_soil1
       cascade_receiver_pool(i_s1s2) = i_soil2
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s2) = 1.0_r8
@@ -498,6 +503,7 @@ contains
       i_s2s3 = 5
       decomp_cascade_con%cascade_step_name(i_s2s3) = 'S2S3'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = rf_s2s3
+      docf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = rf_s2s3
       cascade_donor_pool(i_s2s3) = i_soil2
       cascade_receiver_pool(i_s2s3) = i_soil3
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = 1.0_r8
@@ -505,6 +511,7 @@ contains
       i_s3s4 = 6 
       decomp_cascade_con%cascade_step_name(i_s3s4) = 'S3S4'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s4) = rf_s3s4
+      docf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s4) = rf_s3s4
       cascade_donor_pool(i_s3s4) = i_soil3
       cascade_receiver_pool(i_s3s4) = i_soil4
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s4) = 1.0_r8
@@ -512,6 +519,7 @@ contains
       i_s4atm = 7
       decomp_cascade_con%cascade_step_name(i_s4atm) = 'S4'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s4atm) = 1.
+      docf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s4atm) = 1.
       cascade_donor_pool(i_s4atm) = i_soil4
       cascade_receiver_pool(i_s4atm) = i_atm
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s4atm) = 1.0_r8
@@ -520,6 +528,7 @@ contains
          i_cwdl2 = 8
          decomp_cascade_con%cascade_step_name(i_cwdl2) = 'CWDL2'
          rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = 0._r8
+         docf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = 0._r8
          cascade_donor_pool(i_cwdl2) = i_cwd
          cascade_receiver_pool(i_cwdl2) = i_litr2
          pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = cwd_fcel
@@ -527,6 +536,7 @@ contains
          i_cwdl3 = 9
          decomp_cascade_con%cascade_step_name(i_cwdl3) = 'CWDL3'
          rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl3) = 0._r8
+         docf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl3) = 0._r8
          cascade_donor_pool(i_cwdl3) = i_cwd
          cascade_receiver_pool(i_cwdl3) = i_litr3
          pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl3) = cwd_flig
