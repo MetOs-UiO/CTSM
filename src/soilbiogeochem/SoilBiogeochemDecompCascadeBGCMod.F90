@@ -439,6 +439,8 @@ contains
 
       allocate(rf_s1s2(bounds%begc:bounds%endc,1:nlevdecomp))
       allocate(rf_s1s3(bounds%begc:bounds%endc,1:nlevdecomp))
+      allocate(docf_s1s2(bounds%begc:bounds%endc,1:nlevdecomp))
+      allocate(docf_s1s3(bounds%begc:bounds%endc,1:nlevdecomp))
       allocate(f_s1s2(bounds%begc:bounds%endc,1:nlevdecomp))
       allocate(f_s1s3(bounds%begc:bounds%endc,1:nlevdecomp))
 
@@ -486,6 +488,8 @@ contains
             f_s1s3(c,j) = .004_r8 / (1._r8 - t)
             rf_s1s2(c,j) = t
             rf_s1s3(c,j) = t
+            docf_s1s2(c,j) = 0._r8
+            docf_s1s3(c,j) = 0._r8
          end do
       end do
       initial_stock_soildepth = params_inst%initial_Cstocks_depth
@@ -634,7 +638,7 @@ contains
       i_l1s1 = 1
       decomp_cascade_con%cascade_step_name(i_l1s1) = 'L1S1'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1s1) = rf_l1s1
-      docf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1s1) = docf_l1s1
+      docf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1s1) =0.165_r8 
       cascade_donor_pool(i_l1s1) = i_litr1
       cascade_receiver_pool(i_l1s1) = i_soil1
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1s1) = 1.0_r8
@@ -642,7 +646,7 @@ contains
       i_l2s1 = 2
       decomp_cascade_con%cascade_step_name(i_l2s1) = 'L2S1'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2s1) = rf_l2s1
-      docf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2s1) = docf_l2s1
+      docf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2s1) = 0.16_r8
       cascade_donor_pool(i_l2s1) = i_litr2
       cascade_receiver_pool(i_l2s1) = i_soil1
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2s1)= 1.0_r8
@@ -650,7 +654,7 @@ contains
       i_l3s2 = 3
       decomp_cascade_con%cascade_step_name(i_l3s2) = 'L3S2'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l3s2) = rf_l3s2
-      docf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l3s2) = docf_l3s2
+      docf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l3s2) = 0.16_r8
       cascade_donor_pool(i_l3s2) = i_litr3
       cascade_receiver_pool(i_l3s2) = i_soil2
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l3s2) = 1.0_r8
@@ -674,7 +678,7 @@ contains
       i_s2s1 = 6
       decomp_cascade_con%cascade_step_name(i_s2s1) = 'S2S1'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s1) = rf_s2s1
-      docf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s1) = docf_s2s1
+      docf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s1) = 0._r8
       cascade_donor_pool(i_s2s1) = i_soil2
       cascade_receiver_pool(i_s2s1) = i_soil1
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s1) = f_s2s1
@@ -682,7 +686,7 @@ contains
       i_s2s3 = 7 
       decomp_cascade_con%cascade_step_name(i_s2s3) = 'S2S3'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = rf_s2s3
-      docf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = docf_s2s3
+      docf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = 0._r8
       cascade_donor_pool(i_s2s3) = i_soil2
       cascade_receiver_pool(i_s2s3) = i_soil3
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = f_s2s3
@@ -690,7 +694,7 @@ contains
       i_s3s1 = 8
       decomp_cascade_con%cascade_step_name(i_s3s1) = 'S3S1'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s1) = rf_s3s1
-      docf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s1) = docf_s3s1
+      docf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s1) = 0._r8
       cascade_donor_pool(i_s3s1) = i_soil3
       cascade_receiver_pool(i_s3s1) = i_soil1
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s1) = 1.0_r8
@@ -699,7 +703,7 @@ contains
          i_cwdl2 = 9
          decomp_cascade_con%cascade_step_name(i_cwdl2) = 'CWDL2'
          rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = rf_cwdl2
-         docf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = docf_cwdl2
+         docf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = 0._r8 
          cascade_donor_pool(i_cwdl2) = i_cwd
          cascade_receiver_pool(i_cwdl2) = i_litr2
          pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = cwd_fcel
@@ -707,7 +711,7 @@ contains
          i_cwdl3 = 10
          decomp_cascade_con%cascade_step_name(i_cwdl3) = 'CWDL3'
          rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl3) = rf_cwdl3
-         docf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl3) = docf_cwdl3
+         docf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl3) = 0._r8
          cascade_donor_pool(i_cwdl3) = i_cwd
          cascade_receiver_pool(i_cwdl3) = i_litr3
          pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl3) = cwd_flig
@@ -715,6 +719,8 @@ contains
 
       deallocate(rf_s1s2)
       deallocate(rf_s1s3)
+      deallocate(docf_s1s2)
+      deallocate(docf_s1s3)
       deallocate(f_s1s2)
       deallocate(f_s1s3)
 

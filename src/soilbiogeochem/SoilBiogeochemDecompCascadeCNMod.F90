@@ -161,32 +161,32 @@ contains
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%rf_s3s4_cn=tempr
 
-    tString='docf_l1s1'
+    tString='rf_l1s1'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%docf_l1s1_cn=tempr
 
-    tString='docf_l2s2'
+    tString='rf_l2s2'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%docf_l2s2_cn=tempr
 
-    tString='docf_l3s3'
+    tString='rf_l3s3'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%docf_l3s3_cn=tempr
 
-    tString='docf_s1s2'
+    tString='rf_s1s2'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%docf_s1s2_cn=tempr
 
-    tString='docf_s2s3'
+    tString='rf_s2s3'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%docf_s2s3_cn=tempr
 
-    tString='docf_s3s4'
+    tString='rf_s3s4'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%docf_s3s4_cn=tempr

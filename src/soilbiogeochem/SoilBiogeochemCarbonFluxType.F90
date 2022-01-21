@@ -26,6 +26,7 @@ module SoilBiogeochemCarbonFluxType
      ! decomposition fluxes
      real(r8), pointer :: decomp_cpools_sourcesink_col              (:,:,:) ! change in decomposing c pools. Used to update concentrations concurrently with vertical transport (gC/m3/timestep)  
      real(r8), pointer :: decomp_cascade_hr_vr_col                  (:,:,:) ! vertically-resolved het. resp. from decomposing C pools (gC/m3/s)
+     real(r8), pointer :: decomp_cascade_doc_vr_col                 (:,:,:) ! vertically-resolved het. resp. from decomposing C pools (gC/m3/s)
      real(r8), pointer :: decomp_cascade_hr_col                     (:,:)   ! vertically-integrated (diagnostic) het. resp. from decomposing C pools (gC/m2/s)
      real(r8), pointer :: decomp_cascade_ctransfer_vr_col           (:,:,:) ! vertically-resolved C transferred along deomposition cascade (gC/m3/s)
      real(r8), pointer :: decomp_cascade_ctransfer_col              (:,:)   ! vertically-integrated (diagnostic) C transferred along decomposition cascade (gC/m2/s)
@@ -109,6 +110,9 @@ contains
 
      allocate(this%decomp_cascade_hr_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions))        
      this%decomp_cascade_hr_vr_col(:,:,:)= spval
+
+     allocate(this%decomp_cascade_doc_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions))        
+     this%decomp_cascade_doc_vr_col(:,:,:)= spval
 
      allocate(this%decomp_cascade_hr_col(begc:endc,1:ndecomp_cascade_transitions))                             
      this%decomp_cascade_hr_col(:,:)= nan
@@ -234,6 +238,7 @@ contains
 
         this%decomp_cascade_hr_col(begc:endc,:)             = spval
         this%decomp_cascade_hr_vr_col(begc:endc,:,:)        = spval
+        this%decomp_cascade_doc_vr_col(begc:endc,:,:)       = spval
         this%decomp_cascade_ctransfer_col(begc:endc,:)      = spval
         this%decomp_cascade_ctransfer_vr_col(begc:endc,:,:) = spval
         do l = 1, ndecomp_cascade_transitions
@@ -299,7 +304,34 @@ contains
                       trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_donor_pool(l)))
                  call hist_addfld_decomp (fname=fieldname, units='gC/m^3/s',  type2d='levdcmp', &
                       avgflag='A', long_name=longname, &
-                      ptr_col=data2dptr, default='inactive')
+                      ptr_col=data2dptr, default='active')
+              endif
+
+           ! output the vertically resolved DOC fluxes 
+           !if ( nlevdecomp_full > 1 ) then  
+              !-- HR fluxes (none from CWD)
+              if ( .not. decomp_cascade_con%is_cwd(decomp_cascade_con%cascade_donor_pool(l)) ) then
+                 data2dptr => this%decomp_cascade_doc_vr_col(:,:,l)
+                 ! check to see if there are multiple pathways that include respiration, and if so, note that in the history file
+                 ii = 0
+                 do jj = 1, ndecomp_cascade_transitions
+                    if ( decomp_cascade_con%cascade_donor_pool(jj) == decomp_cascade_con%cascade_donor_pool(l) ) ii = ii+1
+                 end do
+                 if ( ii == 1 ) then
+                    fieldname = &
+                         trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))&
+                         //'_DOC'//trim(vr_suffix)
+                 else
+                    fieldname = &
+                         trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//'_DOC_'//&
+                         trim(decomp_cascade_con%decomp_pool_name_short(decomp_cascade_con%cascade_receiver_pool(l)))&
+                         //trim(vr_suffix)
+                 endif
+                 longname =  'DOC. Resp. from '//&
+                      trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_donor_pool(l)))
+                 call hist_addfld_decomp (fname=fieldname, units='gC/m^3/s',  type2d='levdcmp', &
+                      avgflag='A', long_name=longname, &
+                      ptr_col=data2dptr, default='active')
               endif
 
               !-- transfer fluxes (none from terminal pool, if present)
@@ -396,6 +428,7 @@ contains
 
         this%decomp_cascade_hr_col(begc:endc,:)             = spval
         this%decomp_cascade_hr_vr_col(begc:endc,:,:)        = spval
+        !this%decomp_cascade_doc_vr_col(begc:endc,:,:)        = spval
         this%decomp_cascade_ctransfer_col(begc:endc,:)      = spval
         this%decomp_cascade_ctransfer_vr_col(begc:endc,:,:) = spval
         do l = 1, ndecomp_cascade_transitions
@@ -669,6 +702,7 @@ contains
              i = filter_column(fi)
              this%decomp_cascade_hr_col(i,l)             = value_column
              this%decomp_cascade_hr_vr_col(i,j,l)        = value_column
+             !this%decomp_cascade_doc_vr_col(i,j,l)       = value_column
              this%decomp_cascade_ctransfer_col(i,l)      = value_column
              this%decomp_cascade_ctransfer_vr_col(i,j,l) = value_column
              this%decomp_k_col(i,j,l)                    = value_column

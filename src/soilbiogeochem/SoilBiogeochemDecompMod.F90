@@ -110,7 +110,7 @@ contains
 
          fpi_vr                           =>    soilbiogeochem_state_inst%fpi_vr_col                                  , & ! Input:  [real(r8) (:,:)   ]  fraction of potential immobilization (no units) 
          rf_decomp_cascade                =>    soilbiogeochem_state_inst%rf_decomp_cascade_col                       , & ! Input:  [real(r8) (:,:,:) ]  respired fraction in decomposition step (frac)
-         docf_decomp_cascade              =>    soilbiogeochem_state_inst%docf_decomp_cascade_col                       , & ! Input:  [real(r8) (:,:,:) ]  respired fraction in decomposition step (frac)
+         docf_decomp_cascade              =>    soilbiogeochem_state_inst%docf_decomp_cascade_col                       , & ! Input:  [real(r8) (:,:,:) ]  doc fraction in decomposition step (frac)
          pathfrac_decomp_cascade          =>    soilbiogeochem_state_inst%pathfrac_decomp_cascade_col                 , & ! Input:  [real(r8) (:,:,:) ]  what fraction of C leaving a given pool passes through a given transition (frac)
 
          decomp_npools_vr                 =>    soilbiogeochem_nitrogenstate_inst%decomp_npools_vr_col                , & ! Input:  [real(r8) (:,:,:) ]  (gC/m3)  vertically-resolved decomposing (litter, cwd, soil) N pools
@@ -127,6 +127,7 @@ contains
          
          w_scalar                         =>    soilbiogeochem_carbonflux_inst%w_scalar_col                           , & ! Input:  [real(r8) (:,:)   ]  fraction by which decomposition is limited by moisture availability
          decomp_cascade_hr_vr             =>    soilbiogeochem_carbonflux_inst%decomp_cascade_hr_vr_col               , & ! Output: [real(r8) (:,:,:) ]  vertically-resolved het. resp. from decomposing C pools (gC/m3/s)
+         decomp_cascade_doc_vr            =>    soilbiogeochem_carbonflux_inst%decomp_cascade_doc_vr_col              , & ! Output: [real(r8) (:,:,:) ]  vertically-resolved het. resp. from decomposing C pools (gC/m3/s)
          decomp_cascade_ctransfer_vr      =>    soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_vr_col        , & ! Output: [real(r8) (:,:,:) ]  vertically-resolved het. resp. from decomposing C pools (gC/m3/s)
          decomp_k                         =>    soilbiogeochem_carbonflux_inst%decomp_k_col                           , & ! Output: [real(r8) (:,:,:) ]  rate constant for decomposition (1./sec)      
          phr_vr                           =>    soilbiogeochem_carbonflux_inst%phr_vr_col                             , & ! Input:  [real(r8) (:,:)   ]  potential HR (gC/m3/s)                           
@@ -184,7 +185,8 @@ contains
                         sminn_to_denit_decomp_cascade_vr(c,j,k) = -params_inst%dnp * pmnf_decomp_cascade(c,j,k)
                      end if
                   end if
-                  decomp_cascade_hr_vr(c,j,k) = (rf_decomp_cascade(c,j,k) + docf_decomp_cascade(c,j,k) )* p_decomp_cpool_loss(c,j,k)
+                  decomp_cascade_hr_vr(c,j,k) = rf_decomp_cascade(c,j,k) * p_decomp_cpool_loss(c,j,k)
+                  decomp_cascade_doc_vr(c,j,k) = docf_decomp_cascade(c,j,k) * p_decomp_cpool_loss(c,j,k)
                   decomp_cascade_ctransfer_vr(c,j,k) = (1._r8 - rf_decomp_cascade(c,j,k) - docf_decomp_cascade(c,j,k)) * p_decomp_cpool_loss(c,j,k)
                   if (decomp_npools_vr(c,j,cascade_donor_pool(k)) > 0._r8 .and. cascade_receiver_pool(k) /= i_atm) then
                      decomp_cascade_ntransfer_vr(c,j,k) = p_decomp_cpool_loss(c,j,k) / cn_decomp_pools(c,j,cascade_donor_pool(k))
@@ -214,7 +216,8 @@ contains
             do fc = 1,num_soilc
                c = filter_soilc(fc)
                !
-               decomp_cascade_hr_vr(c,j,k) = ( rf_decomp_cascade(c,j,k) + docf_decomp_cascade(c,j,k) )* p_decomp_cpool_loss(c,j,k)
+               decomp_cascade_hr_vr(c,j,k) = rf_decomp_cascade(c,j,k) * p_decomp_cpool_loss(c,j,k)
+               decomp_cascade_doc_vr(c,j,k) = docf_decomp_cascade(c,j,k) * p_decomp_cpool_loss(c,j,k)
                !
                decomp_cascade_ctransfer_vr(c,j,k) = (1._r8 - rf_decomp_cascade(c,j,k) - docf_decomp_cascade(c,j,k) ) * p_decomp_cpool_loss(c,j,k)
                !
