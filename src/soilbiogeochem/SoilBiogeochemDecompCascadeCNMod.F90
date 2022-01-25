@@ -342,11 +342,11 @@ contains
       rf_s2s3=params_inst%rf_s2s3_cn
       rf_s3s4=params_inst%rf_s3s4_cn
 
-      docf_l1s1=params_inst%docf_l1s1_cn
-      docf_l2s2=params_inst%docf_l2s2_cn
+      docf_l1s1=0.0001_r8    !params_inst%docf_l1s1_cn
+      docf_l2s2=0.000005_r8  !params_inst%docf_l2s2_cn
       docf_l3s3=params_inst%docf_l3s3_cn
-      docf_s1s2=params_inst%docf_s1s2_cn
-      docf_s2s3=params_inst%docf_s2s3_cn
+      docf_s1s2=0.0001_r8    !params_inst%docf_s1s2_cn
+      docf_s2s3=0.000005_r8  !params_inst%docf_s2s3_cn
       docf_s3s4=params_inst%docf_s3s4_cn
 
       ! set the cellulose and lignin fractions for coarse woody debris
