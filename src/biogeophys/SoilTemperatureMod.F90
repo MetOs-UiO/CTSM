@@ -12,7 +12,7 @@ module SoilTemperatureMod
   use decompMod               , only : bounds_type
   use abortutils              , only : endrun
   use perf_mod                , only : t_startf, t_stopf
-  use clm_varctl              , only : iulog
+  use clm_varctl              , only : iulog, use_mosslichen_mode, use_mosslichen_photosyn
   use UrbanParamsType         , only : urbanparams_type
   use UrbanTimeVarType        , only : urbantv_type
   use atm2lndType             , only : atm2lnd_type

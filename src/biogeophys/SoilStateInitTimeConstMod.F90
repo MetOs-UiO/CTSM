@@ -161,7 +161,7 @@ contains
     use clm_varpar          , only : nlevsoi, nlevgrnd, nlevlak, nlevsoifl, nlayer, nlayert, nlevurb, nlevsno
     use clm_varcon          , only : zsoi, dzsoi, zisoi, spval
     use clm_varcon          , only : secspday, pc, mu, denh2o, denice, grlnd
-    use clm_varctl          , only : use_cn, use_lch4, use_fates
+    use clm_varctl          , only : use_cn, use_lch4, use_fates, use_mosslichen, use_mosslichen_mode
     use clm_varctl          , only : iulog, fsurdat, paramfile, soil_layerstruct_predefined
     use landunit_varcon     , only : istdlak, istwet, istsoil, istcrop, istice_mec
     use column_varcon       , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv 
@@ -470,6 +470,19 @@ contains
              if (organic_frac_squared) then
                 om_frac = om_frac**2._r8
              end if
+             
+             if (use_mosslichen .and. use_mosslichen_mode ==1 .and. lev<=1) then  ! Hui: Here need a variable to indicate if moss or lichen exist in this column, 
+                                                                !      better to have weighted percentage of the whole column so as to make it more accurate? 
+                om_frac = organic_max/organic_max               ! 1 if moss and lichen
+             end if
+               
+             if (use_mosslichen .and. use_mosslichen_mode ==2 .and. lev<=2) then
+                om_frac = organic_max/organic_max
+             end if
+             
+             if (use_mosslichen .and. use_mosslichen_mode ==3 .and. lev<=3) then
+                om_frac = organic_max/organic_max
+             end if
 
              if (lun%urbpoi(l)) then
                 om_frac = 0._r8 ! No organic matter for urban
@@ -494,10 +507,11 @@ contains
                 call pedotransf(ipedof, sand, clay, &
                      soilstate_inst%watsat_col(c,lev), soilstate_inst%bsw_col(c,lev), soilstate_inst%sucsat_col(c,lev), xksat)
 
-                om_watsat         = max(0.93_r8 - 0.1_r8   *(zsoi(lev)/zsapric), 0.83_r8)
-                om_b              = min(2.7_r8  + 9.3_r8   *(zsoi(lev)/zsapric), 12.0_r8)
-                om_sucsat         = min(10.3_r8 - 0.2_r8   *(zsoi(lev)/zsapric), 10.1_r8)
-                om_hksat          = max(0.28_r8 - 0.2799_r8*(zsoi(lev)/zsapric), xksat)
+                om_watsat         = max(0.93_r8 - 0.1_r8   *(zsoi(lev)/zsapric), 0.83_r8)           !Hui: saturation can be modified for moss and lichen
+                om_b              = min(2.7_r8  + 9.3_r8   *(zsoi(lev)/zsapric), 12.0_r8)           !Hui: can be modified for moss and lichen
+                om_sucsat         = min(10.3_r8 - 0.2_r8   *(zsoi(lev)/zsapric), 10.1_r8)           !Hui: suction can be modified for moss and lichen
+                om_hksat          = max(0.28_r8 - 0.2799_r8*(zsoi(lev)/zsapric), xksat)             !Hui: water conductivity can be modified
+                                                                                                    !tkm_om,tkd_om and csol_om can be modified
 
                 soilstate_inst%bd_col(c,lev)        = (1._r8 - soilstate_inst%watsat_col(c,lev))*params_inst%pd
                 soilstate_inst%watsat_col(c,lev)    = params_inst%watsat_adjustfactor * ( (1._r8 - om_frac) * &
@@ -511,7 +525,8 @@ contains
                 soilstate_inst%hksat_min_col(c,lev) = xksat
 
                 ! perc_frac is zero unless perf_frac greater than percolation threshold
-                if (om_frac > pcalpha) then
+                if (om_frac > pcalpha) then                                           !Hui: percolation threshold (pcalpha) can be modified to 
+                                                                                      !represent the connected part in moss & lichen
                    perc_norm=(1._r8 - pcalpha)**(-pcbeta)
                    perc_frac=perc_norm*(om_frac - pcalpha)**pcbeta
                 else
