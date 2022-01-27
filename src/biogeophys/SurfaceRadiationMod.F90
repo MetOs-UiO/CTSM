@@ -764,6 +764,8 @@ contains
              ! flux factors computed by SNICAR
           else
              do i = -nlevsno+1,1,1
+               ! Hui: Here, needs to allow index go down to 1-4 for moss and mosslichen
+               !      separate absorption from moss and soil here, separately, to allow less heat in the top soil layer..... 
                 sabg_lyr(p,i) = flx_absdv(c,i)*trd(p,1) + flx_absdn(c,i)*trd(p,2) + &
                      flx_absiv(c,i)*tri(p,1) + flx_absin(c,i)*tri(p,2)
                 ! summed radiation in active snow layers:
