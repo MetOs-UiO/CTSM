@@ -232,10 +232,10 @@ contains
           
     ! moss and lichen Flags
     namelist /clm_inparm/ use_mosslichen,               &
-          use_mosslichen_veg, use_mosslichen_veg_tgtv,  &
-          use_mosslichen_photosyn, use_mosslichen_soil_photosyn,   &
-          use_mosslichen_soil, use_mosslichen_soil_layer,          &
-          use_mosslichen_bvoc, use_mosslichen_undersnow
+          use_mosslichen_mode, use_mosslichen_photosyn,  &
+          use_mosslichen_photo_flux, use_mosslichen_water,   &
+          use_mosslichen_rad,         &
+          use_mosslichen_bvoc
 
     ! CLM 5.0 nitrogen flags
     namelist /clm_inparm/ use_flexibleCN, use_luna
@@ -731,14 +731,12 @@ contains
     
     ! moss and lichen model
     call mpi_bcast (use_mosslichen, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (use_mosslichen_veg, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (use_mosslichen_soil, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (use_mosslichen_undersnow, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (use_mosslichen_bvoc, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (use_mosslichen_veg_tgtv, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_mosslichen_mode, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (use_mosslichen_photosyn, 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (use_mosslichen_soil_layer, 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (use_mosslichen_soil_photosyn, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (use_mosslichen_bvoc, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_mosslichen_photo_flux, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (use_mosslichen_water, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (use_mosslichen_rad, 1, MPI_INTEGER, 0, mpicom, ier)
 
     ! flexibleCN nitrogen model
     call mpi_bcast (use_flexibleCN, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -1095,14 +1093,12 @@ contains
     end if
     
     if (use_mosslichen) then
-       write(iulog, *) '    use_mosslichen_veg = ', use_mosslichen_veg
-       write(iulog, *) '    use_mosslichen_soil = ', use_mosslichen_soil
-       write(iulog, *) '    use_mosslichen_veg_tgtv = ', use_mosslichen_veg_tgtv
-       write(iulog, *) '    use_mosslichen_bvoc = ', use_mosslichen_bvoc
-       write(iulog, *) '    use_mosslichen_undersnow = ', use_mosslichen_undersnow
+       write(iulog, *) '    use_mosslichen_mode = ', use_mosslichen_mode
        write(iulog, *) '    use_mosslichen_photosyn = ', use_mosslichen_photosyn
-       write(iulog, *) '    use_mosslichen_soil_photosyn = ',use_mosslichen_soil_photosyn
-       write(iulog, *) '    use_mosslichen_soil_layer = ',use_mosslichen_soil_layer
+       write(iulog, *) '    use_mosslichen_photo_flux = ', use_mosslichen_photo_flux
+       write(iulog, *) '    use_mosslichen_water= ',use_mosslichen_water
+       write(iulog, *) '    use_mosslichen_rad = ',use_mosslichen_rad
+       write(iulog, *) '    use_mosslichen_bvoc = ', use_mosslichen_bvoc
     end if
     
   end subroutine control_print

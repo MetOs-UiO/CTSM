@@ -14,7 +14,7 @@ module SurfaceAlbedoMod
   use landunit_varcon   , only : istsoil, istcrop, istdlak
   use clm_varcon        , only : grlnd, namep
   use clm_varpar        , only : numrad, nlevcan, nlevsno, nlevcan
-  use clm_varctl        , only : fsurdat, iulog, use_snicar_frc, use_SSRE, use_mosslichen_undersnow
+  use clm_varctl        , only : fsurdat, iulog, use_snicar_frc, use_SSRE, use_mosslichen_rad
   use pftconMod         , only : pftcon
   use SnowSnicarMod     , only : sno_nbr_aer, SNICAR_RT, DO_SNO_AER, DO_SNO_OC
   use AerosolMod        , only : aerosol_type
@@ -492,7 +492,7 @@ contains
     
 ! Create solar-vegetated filter for the following calculations
 ! Hui: This part needs to be moved here
-!    if(use_mosslichen_undersnow)then
+!    if(use_mosslichen_rad == 2 .or. use_mosslichen_rad == 4)then
        num_vegsol  = 0
        num_novegsol= 0
        num_nvsol   = 0
@@ -539,7 +539,7 @@ contains
 !        3. how to recognize moss and lichen patch for calculation: this is done in fates not here. (But it is also needed to have mosslichen filter in CLM too.)
 !        4. how to calculate radiation absorption: wrap_sunfrac need to be modified
 
-    if(use_mosslichen_undersnow)then
+    if(use_mosslichen_rad == 2 .or. use_mosslichen_rad == 4)then
       if (use_fates) then
         call clm_fates%wrap_mosslichen_radiation(bounds, nc, &
                  num_vegsol, filter_vegsol, &

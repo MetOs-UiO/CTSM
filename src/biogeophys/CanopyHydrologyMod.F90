@@ -17,7 +17,7 @@ module CanopyHydrologyMod
   use decompMod       , only : bounds_type
   use abortutils      , only : endrun
   use clm_time_manager, only : get_step_size_real
-  use clm_varctl      , only : iulog, use_mosslichen_veg
+  use clm_varctl      , only : iulog, use_mosslichen_water
   use column_varcon   , only : icol_sunwall, icol_shadewall
   use subgridAveMod   , only : p2c
   use LandunitType    , only : lun                
@@ -539,7 +539,7 @@ contains
            
            if ( EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 3 ) then ! Moss
              !print *, "moss 1"
-              if (use_mosslichen_veg) then
+              if (use_mosslichen_water == 1) then
                  if (use_clm5_fpi) then
                     fpiliq = interception_fraction * tanh(elai(p) + esai(p))                      ! Hui: fpiliq can not be over 1, the fraction can increase faster with elai and esai
                  else
@@ -554,7 +554,7 @@ contains
 
            else if ( EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 4 ) then ! Lichen
               !print *, "lichen_1"
-              if (use_mosslichen_veg) then
+              if (use_mosslichen_water == 1) then
                  if (use_clm5_fpi) then
                     fpiliq = interception_fraction * tanh(elai(p) + esai(p))
                  else
@@ -790,7 +790,7 @@ contains
 ! Species dependent
 ! Moss and Lichen has specific pft number as a varialbe
            if ( EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 3 .or. EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 4 ) then ! Moss & lichen
-              if (use_mosslichen_veg) then
+              if (use_mosslichen_water == 1) then
                  !print *, "moss or lichen 3"
                  liqcanmx = 2._r8 * (elai(p) + esai(p))
               else
@@ -802,7 +802,7 @@ contains
            qflx_liqcanfall(p) = max((liqcan(p) - liqcanmx)/dtime, 0._r8)
            
            if ( EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 3 .or. EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 4 ) then ! Moss & lichen
-              if (use_mosslichen_veg) then
+              if (use_mosslichen_water == 1) then
                  snocanmx = 10._r8 * (elai(p) + esai(p))  ! default = 6
               else
                  snocanmx = 0._r8
@@ -975,7 +975,7 @@ contains
              g = patch%gridcell(p)        
              if ( EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 3 ) then ! Moss, This might be redundant, as "frac_veg_nosno" will be 0 for moss covered by snow?
                 !print *, "moss 2"
-                if (use_mosslichen_veg) then
+                if (use_mosslichen_water == 1) then
                    qflx_snotempunload(p) = 0._r8
                    qflx_snowindunload(p) = 0._r8
                    qflx_snow_unload(p) = 0._r8
@@ -985,7 +985,7 @@ contains
                    qflx_snow_unload(p) = 0._r8
                 end if
              else if ( EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 4 ) then
-               if (use_mosslichen_veg) then
+               if (use_mosslichen_water == 1) then
                  qflx_snotempunload(p) = max(0._r8,snocan(p)*(forc_t(c)-270.15_r8)/1.87e5_r8)
                  qflx_snowindunload(p) = 0.5_r8*snocan(p)*forc_wind(g)/1.56e5_r8
                  qflx_snow_unload(p) = min(qflx_snotempunload(p) + qflx_snowindunload(p), snocan(p)/dtime)
@@ -1253,7 +1253,7 @@ contains
              !print *, "check1=", EDPftvarcon_inst%stomatal_model(patch%itype(p))
              if ( EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 3 .or. EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 4 ) then ! moss or lichen
                 print *, "moss or lichen 2"
-                if (use_mosslichen_veg) then
+                if (use_mosslichen_water == 1) then
                    vegt    = frac_veg_nosno(p)*(elai(p) + esai(p))
                    fwet(p) = (h2ocan / (vegt * 2._r8))
                    fwet(p) = min (fwet(p),1._r8)   ! maximum limit of fwet is 1, not 0.05 as default
@@ -1277,7 +1277,7 @@ contains
               end if !moss or lichen
 !EHUI
            else     
-              ! Hui: when use_mosslichen_veg=.false., ho2can will be 0, fwet and fcansno will be set to 0 here automatically
+              ! Hui: when use_mosslichen_water =0, ho2can will be 0, fwet and fcansno will be set to 0 here automatically
               fwet(p) = 0._r8
               fcansno(p) = 0._r8
            end if ! h2ocan > 0._r8

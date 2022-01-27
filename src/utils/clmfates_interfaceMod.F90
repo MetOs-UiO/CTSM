@@ -62,7 +62,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_fates_sp
    use clm_varctl        , only : fates_inventory_ctrl_filename
    use clm_varctl        , only : use_nitrif_denitrif
-   use clm_varctl        , only : use_mosslichen, use_mosslichen_undersnow, use_mosslichen_photosyn
+   use clm_varctl        , only : use_mosslichen, use_mosslichen_rad, use_mosslichen_photosyn
    use clm_varcon        , only : tfrz
    use clm_varcon        , only : spval 
    use clm_varcon        , only : denice
@@ -371,7 +371,7 @@ module CLMFatesInterfaceMod
         end if
         call set_fates_ctrlparms('use_mosslichen',ival=pass_mosslichen)
         
-        if(use_mosslichen_undersnow)then
+        if(use_mosslichen_rad == 4)then
            pass_mosslichen_undersnow = 1
         else
            pass_mosslichen_undersnow = 0

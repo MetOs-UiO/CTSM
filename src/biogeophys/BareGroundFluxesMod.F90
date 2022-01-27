@@ -23,7 +23,7 @@ module BareGroundFluxesMod
   use LandunitType         , only : lun                
   use ColumnType           , only : col                
   use PatchType            , only : patch                
-  use clm_varctl        , only : use_mosslichen_soil_photosyn
+  use clm_varctl        , only : use_mosslichen_photosyn
   use EDPftvarcon          , only : EDPftvarcon_inst
   use GridcellType          , only : grc                
   use CLMFatesInterfaceMod, only : hlm_fates_interface_type
@@ -392,7 +392,7 @@ contains
             grnd_ch4_cond(p) = 1._r8/raw
          end if
 
-!        if(use_mosslichen_soil_photosyn .eq. 3) then
+!        if(use_mosslichen_photosyn .eq. 4) then
 !          BHui: need by photosynthesis
 !          Bulk boundary layer resistance of leaves
 !          uaf(p) = um(p)*sqrt( 1._r8/(ram*um(p)) )
@@ -519,7 +519,7 @@ contains
          end if
          
          ! Hui: set variables for photosynthesis 
-!        if(use_mosslichen_soil_photosyn .eq. 3) then
+!        if(use_mosslichen_photosyn .eq. 4) then
 !         if ( EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 3 .or. EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 4 ) then
 !            svpts(p) = qg_soil(c)     ! pa
             
@@ -535,7 +535,7 @@ contains
          
       end do
 
-!     if(use_mosslichen_soil_photosyn .eq. 3) then
+!     if(use_mosslichen_photosyn .eq. 4) then
 !     Hui: if consider moss and lichen as soil, the photosynthesis will have to be called in baregroundfluxes instead of canopyflux. 
 !     Hui: Need a dedicated wrapper for moss&lichen photosynthesis!!!
 !      call clm_fates%wrap_photosynthesis(nc, bounds, num_noexposedvegp, filter_noexposedvegp(1:num_noexposedvegp), &

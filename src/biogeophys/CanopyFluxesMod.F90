@@ -14,7 +14,7 @@ module CanopyFluxesMod
   use shr_log_mod           , only : errMsg => shr_log_errMsg
   use abortutils            , only : endrun
   use clm_varctl            , only : iulog, use_cn, use_lch4, use_c13, use_c14, use_cndv, use_fates, &
-                                     use_luna, use_hydrstress, use_mosslichen_veg, use_mosslichen_veg_tgtv, use_mosslichen_soil, use_mosslichen_soil_photosyn
+                                     use_luna, use_hydrstress, use_mosslichen_mode, use_mosslichen_photosyn, use_mosslichen_photo_flux
   use clm_varpar            , only : nlevgrnd, nlevsno
   use clm_varcon            , only : namep 
   use pftconMod             , only : pftcon
@@ -718,12 +718,10 @@ contains
          p = filterp(f)
          c = patch%column(p)
          
-         if (use_mosslichen_veg .or. (use_mosslichen_soil .and. use_mosslichen_soil_photosyn==0)) then
-           lt = min(elai(p)+esai(p), tlsai_crit)
+         if (use_mosslichen_photo_flux==2) then
+           lt=0.01
          else
-           if (use_mosslichen_soil_photosyn==1) then
-              lt=0.01
-           end if
+           lt = min(elai(p)+esai(p), tlsai_crit)
          end if
          
          egvf =(1._r8 - alpha_aero * exp(-lt)) / (1._r8 - alpha_aero * exp(-tlsai_crit))
@@ -861,12 +859,10 @@ contains
             ! Parameterization for variation of csoilc with canopy density from
             ! X. Zeng, University of Arizona
           
-            if (use_mosslichen_veg .or. (use_mosslichen_soil .and. use_mosslichen_soil_photosyn==0)) then
-              w = exp(-(elai(p)+esai(p)))
+            if (use_mosslichen_photo_flux==2) then
+              w = exp(-(0.01))
             else
-              if (use_mosslichen_soil_photosyn == 1) then
-                w = exp(-(0.01))
-              end if
+              w = exp(-(elai(p)+esai(p)))
             end if
             
             ! changed by K.Sakaguchi from here
@@ -886,7 +882,7 @@ contains
             print *, "check2=", EDPftvarcon_inst%stomatal_model(patch%itype(p))
             if ( EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 3 .or. EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 4 ) then ! moss or lichen  
                print *, "moss or lichen 0"          
-               if (use_mosslichen_veg) then              ! Try to increase ground resistance if moss and lichen are implemented as vegetation
+               if (use_mosslichen_mode==0) then              ! Try to increase ground resistance if moss and lichen are implemented as vegetation
                   ricsoilc= params_inst%csoilc    !* fwet(p)          ! even smaller than 0.004.
                   csoilcn = ricsoilc
                   print *, "csoilcn=", csoilcn
@@ -925,7 +921,7 @@ contains
 !Hui: saturation vapor pressure for moss and lichen shoulded be modified
 !Hui: Porada et al. 2013, equation B27, B28
             if ( EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 3 .or. EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 4 ) then
-              if (use_mosslichen_veg) then
+              if (use_mosslichen_mode==0) then
                  svpts(p) = el(p)     ! pa
               else
                  svpts(p) = qg_soil(c)     ! pa
@@ -995,12 +991,10 @@ contains
             ! Moved the original subroutine in-line...
 
             wta    = 1._r8/rah(p,1)             ! air
-            if (use_mosslichen_veg .or. (use_mosslichen_soil .and. use_mosslichen_soil_photosyn==0)) then
-              wtl    = (elai(p)+esai(p))/rb(p)    ! leaf
+            if (use_mosslichen_photo_flux==2) then
+              wtl    = (0.01)/rb(p)    ! leaf
             else
-              if (use_mosslichen_soil_photosyn == 1) then
-                 wtl    = (0.01)/rb(p)    ! leaf
-              end if
+              wtl    = (elai(p)+esai(p))/rb(p)    ! leaf
             end if
             
             wtg(p) = 1._r8/rah(p,2)             ! ground
@@ -1030,12 +1024,10 @@ contains
             
             ! Calculate canopy conductance for methane / oxygen (e.g. stomatal conductance & leaf bdy cond)
             if (use_lch4)    then
-               if (use_mosslichen_veg .or. (use_mosslichen_soil .and. use_mosslichen_soil_photosyn==0)) then
-                  canopy_cond(p) = (laisun(p)/(rb(p)+rssun(p)) + laisha(p)/(rb(p)+rssha(p)))/max(elai(p), 0.01_r8)
+               if (use_mosslichen_photo_flux==2) then
+                  canopy_cond(p) = (laisun(p)/(rb(p)+rssun(p)) + laisha(p)/(rb(p)+rssha(p)))/max(0.01, 0.01_r8)
                else
-                  if (use_mosslichen_soil_photosyn == 1) then
-                     canopy_cond(p) = (laisun(p)/(rb(p)+rssun(p)) + laisha(p)/(rb(p)+rssha(p)))/max(0.01, 0.01_r8)
-                  end if
+                  canopy_cond(p) = (laisun(p)/(rb(p)+rssun(p)) + laisha(p)/(rb(p)+rssha(p)))/max(elai(p), 0.01_r8)
                end if
             end if
 
@@ -1083,12 +1075,10 @@ contains
             ! Moved the original subroutine in-line...
 
             wtaq    = frac_veg_nosno(p)/raw(p,1)                        ! air
-            if (use_mosslichen_veg .or. (use_mosslichen_soil .and. use_mosslichen_soil_photosyn==0)) then
-              wtlq    = frac_veg_nosno(p)*(elai(p)+esai(p))/rb(p) * rpp   ! leaf
+            if (use_mosslichen_photo_flux==2) then
+              wtlq    = frac_veg_nosno(p)*(0.01)/rb(p) * rpp
             else
-              if (use_mosslichen_soil_photosyn==1) then
-                 wtlq    = frac_veg_nosno(p)*(0.01)/rb(p) * rpp
-              end if
+              wtlq    = frac_veg_nosno(p)*(elai(p)+esai(p))/rb(p) * rpp   ! leaf
             end if
             
             !Litter layer resistance. Added by K.Sakaguchi
@@ -1122,7 +1112,7 @@ contains
             dc2 = hvap*forc_rho(c)*wtlq
 !Hui
         if ( EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 3 .or. EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 4 ) then ! moss or lichen
-            if (use_mosslichen_veg_tgtv) then
+            if (use_mosslichen_photo_flux==1) then
               efsh = forc_rho(c)*cpair*((wtl*wta*(t_veg(p)-thm(p))/(wtl+wta))-wtg(p)*(t_grnd(c)-t_veg(p)))
               efe(p) = dc2*(wtgaq*qsatl(p)-wtgq0*qg(c)-wtaq0(p)*forc_q(c))           
             else 
@@ -1147,7 +1137,7 @@ contains
                  +frac_h2osfc(c)*t_h2osfc(c)**4)
 !Hui
         if ( EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 3 .or. EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 4 ) then ! moss or lichen
-            if (use_mosslichen_veg_tgtv) then
+            if (use_mosslichen_photo_flux==1) then
                dt_veg(p) = (sabv(p) + air(p) + bir(p)*t_veg(p)**4 + &
                  cir(p)*lw_grnd - efsh - efe(p)) / &
                  (- 4._r8*bir(p)*t_veg(p)**3 +forc_rho(c)*cpair*(wtl*wta/(wtl+wta)+wtg(p)) +dc2*wtgaq*qsatldT(p))
@@ -1171,7 +1161,7 @@ contains
                dt_veg(p) = delmax*dels/del(p)
                t_veg(p) = tlbef(p) + dt_veg(p)
                if ( EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 3 .or. EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 4 ) then ! moss or lichen
-                    if (use_mosslichen_veg_tgtv) then
+                    if (use_mosslichen_photo_flux==1) then
                       err(p) = sabv(p) + air(p) + bir(p)*tlbef(p)**3*(tlbef(p) + &
                                   4._r8*dt_veg(p)) + cir(p)*lw_grnd - &
                                   (efsh + forc_rho(c)*cpair*(wtl*wta/(wtl+wta)+wtg(p))*dt_veg(p)) - (efe(p) + &
@@ -1316,7 +1306,7 @@ contains
          ! Fluxes from ground to canopy space
 
          if ( EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 3 .or. EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 4 ) then ! moss or lichen
-           if (use_mosslichen_veg_tgtv) then
+           if (use_mosslichen_photo_flux==1) then
              delt    =t_grnd(c)-t_veg(p)
            else
              delt    = wtal(p)*t_grnd(c)-wtl0(p)*t_veg(p)-wta0(p)*thm(p)
@@ -1332,7 +1322,7 @@ contains
          ! compute individual sensible heat fluxes
          if ( EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 3 .or. EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 4 ) then ! moss or lichen
          ! Hui, this part may need further consideration.
-           if (use_mosslichen_veg_tgtv) then
+           if (use_mosslichen_photo_flux==1) then
               delt_snow = t_soisno(c,snl(c)+1)-t_veg(p)
               delt_soil  =t_soisno(c,1)-t_veg(p)
               delt_h2osfc  = t_h2osfc(c)-t_veg(p)
@@ -1438,7 +1428,7 @@ contains
          cgrnd(p)  = cgrnds(p) + cgrndl(p)*htvp(c)
 
          ! Update dew accumulation (kg/m2)
-      if (use_mosslichen_veg .or. EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 1 .or. EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 2 ) then ! only non -moss or -lichen, do an update
+      if (use_mosslichen_mode==0 .or. EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 1 .or. EDPftvarcon_inst%stomatal_model(patch%itype(p)) == 2 ) then ! only non -moss or -lichen, do an update
          if (t_veg(p) > tfrz ) then ! above freezing, update accumulation in liqcan
             if ((qflx_evap_veg(p)-qflx_tran_veg(p))*dtime > liqcan(p)) then ! all liq evap
                ! In this case, all liqcan will evap. Take remainder from snocan

@@ -244,27 +244,85 @@ module clm_varctl
   logical, public :: use_mosslichen      = .true.            ! turn on moss&lichen module
                                                              ! use_mosslichen can only be used together with use_fates at the moment
                                                              ! use_mosslichen can also be used with use_cn in the future (not implemented yet)
-  logical, public :: use_mosslichen_veg  = .false.           ! use vegetation representation for water and heat flux of moss&lichen
-  logical, public :: use_mosslichen_veg_tgtv  = .false.      ! rewire resistence model between soil-mosslichen-atm
-  integer, public :: use_mosslichen_photosyn  = 1            ! How photosynthesis is treated (this will not be used in FATES, as this will be controled by "stomatal_model")
-                                                             ! 0: normal photosynthesis as other pfts with stomatal control (for testing purpose)
-                                                             ! 1: moss and lichen photosynthesis without stomatal control (default, https://doi.org/10.5194/bg-10-6989-2013)
-                                                             ! 2: moss and lichen photosynthesis with explicit treatment of Mesophyll conductance (not implemented yet, https://doi.org/10.1111/nph.15675; https://doi.org/10.1111/tpj.14587)
-  logical, public :: use_mosslichen_soil = .true.            ! use soil representation for water and heat flux of moss&lichen
-  integer, public :: use_mosslichen_soil_layer = 1           ! 0: add additional layer for moss and lichen (not implemented yet)
-                                                             ! 1: use first soil layer for moss and lichen (default)
-                                                             ! 2: use top 1-2 soil layers for moss and lichen (not implemented yet)
-                                                             ! 3: use top 1-3 soil layers for moss and lichen (not implemented yet)
-  integer, public :: use_mosslichen_soil_photosyn = 1        ! How photosynthesis is treated when moss and lichen are treated as soil layer
-                                                             ! 0: photosynthesis is still calculated in CanopyFluxesMod, as normal vegetation
-                                                             ! 1: photosynthesis is still calculated in CanopyFluxesMod, assume assume elai+esai = 0.01
-                                                             ! 2: photosynthesis is still calculated in CanopyFluxesMod, assume TV (moss)=TG (not implemented, might not work)
-                                                             ! 3: photosynthesis is called in a different module (e.g., BareGroundFluxesMod) instead of CanopyFluxesMod.
-  logical, public :: use_mosslichen_undersnow = .true.       ! allow moss lichen exist under snow, this switch can be extended to other pfts that are buried by snow: https://doi.org/10.1111/oik.02233, https://doi.org/10.1890/02-3154
-  logical, public :: use_mosslichen_bvoc      = .false.      ! switch for biogenic emission from moss and lichen (not implemented yet), https://doi.org/10.5194/bg-17-6219-2020, and  https://doi.org/10.1111/gcb.12995
+
+  !logical, public :: use_mosslichen_veg  = .false.           ! use vegetation representation for water and heat flux of moss&lichen
+  !logical, public :: use_mosslichen_veg_tgtv  = .false.      ! rewire resistence model between soil-mosslichen-atm
+  !logical, public :: use_mosslichen_soil = .true.            ! use soil representation for water and heat flux of moss&lichen
+  !integer, public :: use_mosslichen_soil_layer = 1           ! 
+                                                             ! 3: use top 1-2 soil layers for moss and lichen (not implemented yet)
+                                                             ! 4: use top 1-3 soil layers for moss and lichen (not implemented yet)
+  integer, public :: use_mosslichen_mode     = 0             ! how to represent moss and lichen:
+                                                             ! 0: vegetation
+                                                             ! 1: soil layer 1
+                                                             ! 2: soil layer 1-2
+                                                             ! 3: soil layer 1-3
+                                                             ! 4: Add additional soil layer (not implemented)
+  integer, public :: use_mosslichen_photosyn = 1             ! How photosynthesis of moss and lichen are treated
+                                                             ! 0: No photosynthesis (both CLM and FATES) (similar to JULES's implementation), 
+                                                             !    Work with both CLM and FATES (focus 11.2021!)
+                                                             ! 1: normal photosynthesis as other vegetation with stomatal control  
+                                                             !    This opition will overwrite FATES stomatal control parameter if inconsistent.
+                                                             !    Work with mode 0-4, both CLM and FATES
+                                                             ! 2: moss and lichen photosynthesis without stomatal control (default, https://doi.org/10.5194/bg-10-6989-2013)
+                                                             !    This opition will overwrite FATES stomatal control parameter
+                                                             !    Work with mode 0-4, both CLM and FATES
+                                                             ! 3: moss and lichen photosynthesis with explicit treatment of Mesophyll conductance 
+                                                             !   (not implemented yet, https://doi.org/10.1111/nph.15675; https://doi.org/10.1111/tpj.14587)
+                                                             !    This opition will overwrite FATES stomatal control parameter if inconsistent.
+                                                             !    Work with mode 0-4, both CLM and FATES
+                                                             ! 4: photosynthesis is called in a different module (e.g., BareGroundFluxesMod) 
+                                                             !    instead of CanopyFluxesMod (To much work to do this, not realistic).
+                                                             !    This option will only work with mode 1-4 (soil representation), only CLM
+  integer, public :: use_mosslichen_photo_flux= 1            ! How the canopy heat and water fluxes are treated while moss and lichen is doing photosynthesis
+                                                             !    This does not have effect if use_mosslichen_photosyn = 0 or 4
+                                                             ! 0: Normal as vegetation layer while doing photosynthesis (mode 0-4)
+                                                             ! 1: rewire resistence model between soil-mosslichen-atm (mode 0)
+                                                             ! 2: assume elai+esai = 0.01 while calculating photosynthesis (mode 1-4, use_mosslichen_photosyn=1-3)
+                                                             ! 3: assume TV (moss)=TG while calculating photosynthesis 
+                                                             !    (not implemented, might not work) (mode 1-4)
+  integer, public :: use_mosslichen_water = 1                ! How water content of moss and lichen is treated 
+                                                             ! 0: No special treatment (mode 0 as vegetation (interception),  mode 1-4 as soil water content)
+                                                             ! 1: High canopy water interception and interception rate for moss and lichen (mode 0)
+                                                             ! 2: High water holding capacity of soil (mode 1-4)
+  integer, public :: use_mosslichen_rad = 1                  ! How radiation (albedo) of moss and lichen is represented 
+                                                             ! 0: use default soil radiation scheme for photosynthesis and heat (use_mosslichen_photosyn=0 and 4)
+                                                             ! 1: use clm vegetation radiation scheme, no moss and lichen when they are covered by snow
+                                                             !   (use_mosslichen_photosyn=1-3)
+                                                             !    mode 0: radiative heat of moss and lichen is implicitly considered.
+                                                             !            radiative heat of soil goes to 1st layer of soil
+                                                             !            snow cover affect elai, when it is totally coverred by snow, elai=0
+                                                             !    mode 1-4:radiative heat of moss and lichen goes to the corresponding soil layer (no snow cover).
+                                                             !             radiative heat of moss and lichen is zero (snow covered)
+                                                             !             radiative heat of soil goes to the underlying soil layer of moss and lichen (no snow cover)
+                                                             !             radiative heat of soil goes to the first layer of soil, like option 0 (snow cover)
+                                                             !    consistent with use_cn
+                                                             ! 2: use clm vegetation radiation scheme, allow moss lichen exist under snow
+                                                             !    (use_mosslichen_photosyn=1-3)
+                                                             !    mode 0: radiative heat of moss and lichen is implicitly considered (no snow cover).
+                                                             !            radiative heat of soil goes to 1st layer of soil (no snow cover)
+                                                             !            radiative heat of moss and lichen goes to the first soil layer (snow cover)
+                                                             !            radiative heat of soil goes to 2st layer of soil (snow cover)
+                                                             !    mode 1-4:radiative heat of moss and lichen (both when no snow and snow) goes to the corresponding soil layer.
+                                                             !             rediative heat of soil goes to the underlying soil layer of moss and lichen
+                                                             !    consistent with use_cn
+                                                             ! 3: use fates vegetation radiation scheme, no moss and lichen when they are covered by snow
+                                                             !    (use_mosslichen_photosyn=1-3)
+                                                             !    operate the same way as option 1
+                                                             !    consistent with use_fates
+                                                             ! 4: use fates vegetation radiation scheme, allow moss lichen exist under snow
+                                                             !    (use_mosslichen_photosyn=1-3)
+                                                             !    operate the same way as option 2
+                                                             !    consistent with use_fates
+                                                             ! allow vegetation exist under snow, 
+                                                             ! this switch can be used for other pfts that are buried by snow: 
+                                                             ! https://doi.org/10.1111/oik.02233, https://doi.org/10.1890/02-3154
+
+  logical, public :: use_mosslichen_bvoc      = .false.      ! switch for biogenic emission from moss and lichen (not implemented yet),
+                                                             ! https://doi.org/10.5194/bg-17-6219-2020, and  https://doi.org/10.1111/gcb.12995
   
   ! combine use_fates and use_mosslichen   
   ! combine use_cn and use_mosslichen, not available at the moment!
+  
   !----------------------------------------------------------
   !  LUNA switches		
   !----------------------------------------------------------
