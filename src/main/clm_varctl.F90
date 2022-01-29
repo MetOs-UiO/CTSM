@@ -282,8 +282,8 @@ module clm_varctl
                                                              !    (not implemented, might not work) (mode 1-4)
   integer, public :: use_mosslichen_water = 1                ! How water content of moss and lichen is treated 
                                                              ! 0: No special treatment (mode 0 as vegetation (interception),  mode 1-4 as soil water content)
-                                                             ! 1: High canopy water interception and interception rate for moss and lichen (mode 0)
-                                                             ! 2: High water holding capacity of soil (mode 1-4)
+                                                             ! 1: Canopy water interception and interception rate for moss and lichen (mode 0-4)
+                                                             ! 2: Water holding capacity of soil (mode 1-4)
   integer, public :: use_mosslichen_rad = 1                  ! How radiation (albedo) of moss and lichen is represented 
                                                              ! 0: use default soil radiation scheme for photosynthesis and heat (use_mosslichen_photosyn=0 and 4)
                                                              ! 1: use clm vegetation radiation scheme, no moss and lichen when they are covered by snow
