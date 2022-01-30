@@ -462,8 +462,8 @@ contains
       rf_cwdl3 = params_inst%rf_cwdl3_bgc
 
       ! set doc fractions for fluxes between compartments
-      docf_l1s1 = 0.0001_r8  !params_inst%docf_l1s1_bgc
-      docf_l2s1 = 0.000005_r8 !params_inst%docf_l2s1_bgc
+      docf_l1s1 = 0.000143_r8  !params_inst%docf_l1s1_bgc
+      docf_l2s1 = 0.00007143_r8 !params_inst%docf_l2s1_bgc
       docf_l3s2 = params_inst%docf_l3s2_bgc
       docf_s2s1 = params_inst%docf_s2s1_bgc
       docf_s2s3 = params_inst%docf_s2s3_bgc
@@ -488,8 +488,8 @@ contains
             f_s1s3(c,j) = .004_r8 / (1._r8 - t)
             rf_s1s2(c,j) = t
             rf_s1s3(c,j) = t
-            docf_s1s2(c,j) = 0.0001_r8
-            docf_s1s3(c,j) = 0._r8
+            docf_s1s2(c,j) = 0.0007143_r8
+            docf_s1s3(c,j) = 0.000143_r8
          end do
       end do
       initial_stock_soildepth = params_inst%initial_Cstocks_depth
@@ -638,7 +638,7 @@ contains
       i_l1s1 = 1
       decomp_cascade_con%cascade_step_name(i_l1s1) = 'L1S1'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1s1) = rf_l1s1
-      docf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1s1) =0.165_r8 
+      docf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1s1)=docf_l1s1 
       cascade_donor_pool(i_l1s1) = i_litr1
       cascade_receiver_pool(i_l1s1) = i_soil1
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1s1) = 1.0_r8
@@ -646,7 +646,7 @@ contains
       i_l2s1 = 2
       decomp_cascade_con%cascade_step_name(i_l2s1) = 'L2S1'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2s1) = rf_l2s1
-      docf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2s1) = 0.16_r8
+      docf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2s1)=docf_l2s1
       cascade_donor_pool(i_l2s1) = i_litr2
       cascade_receiver_pool(i_l2s1) = i_soil1
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2s1)= 1.0_r8
@@ -654,7 +654,7 @@ contains
       i_l3s2 = 3
       decomp_cascade_con%cascade_step_name(i_l3s2) = 'L3S2'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l3s2) = rf_l3s2
-      docf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l3s2) = 0.16_r8
+      docf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l3s2) = 0.00_r8
       cascade_donor_pool(i_l3s2) = i_litr3
       cascade_receiver_pool(i_l3s2) = i_soil2
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l3s2) = 1.0_r8
