@@ -462,8 +462,8 @@ contains
       rf_cwdl3 = params_inst%rf_cwdl3_bgc
 
       ! set doc fractions for fluxes between compartments
-      docf_l1s1 = 0.000143_r8  !params_inst%docf_l1s1_bgc
-      docf_l2s1 = 0.00007143_r8 !params_inst%docf_l2s1_bgc
+      docf_l1s1 = 0.00_r8  !params_inst%docf_l1s1_bgc
+      docf_l2s1 = 0.00_r8 !params_inst%docf_l2s1_bgc
       docf_l3s2 = params_inst%docf_l3s2_bgc
       docf_s2s1 = params_inst%docf_s2s1_bgc
       docf_s2s3 = params_inst%docf_s2s3_bgc
@@ -488,8 +488,8 @@ contains
             f_s1s3(c,j) = .004_r8 / (1._r8 - t)
             rf_s1s2(c,j) = t
             rf_s1s3(c,j) = t
-            docf_s1s2(c,j) = 0.0007143_r8
-            docf_s1s3(c,j) = 0.000143_r8
+            docf_s1s2(c,j) = 0.0_r8
+            docf_s1s3(c,j) = 0.0_r8
          end do
       end do
       initial_stock_soildepth = params_inst%initial_Cstocks_depth
