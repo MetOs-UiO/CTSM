@@ -75,7 +75,8 @@ from ctsm.ctsm_logging import (
     process_logging_args,
 )
 
-DEFAULTS_FILE = "default_data.cfg"
+CESM_ROOT = path_to_ctsm_root()
+DEFAULTS_FILE = os.path.join(CESM_ROOT, "tools/site_and_regional", "default_data.cfg")
 
 logger = logging.getLogger(__name__)
 
@@ -91,6 +92,8 @@ def get_parser():
     parser = ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
+
+    parser.add_argument("--data-file", default=DEFAULTS_FILE, help="default data file [default: %(default)s]")
 
     parser.print_usage = parser.print_help
     subparsers = parser.add_subparsers(
@@ -325,20 +328,20 @@ def get_parser():
     )
     return parser
 
-def setup_user_mods(user_mods_dir, cesmroot):
+def setup_user_mods(user_mods_dir):
     """
     Sets up the user mods files and directories
     """
     if not os.path.isdir(user_mods_dir):
         os.mkdir(user_mods_dir)
 
-    nl_clm_base = os.path.join(cesmroot, "cime_config/user_nl_clm")
+    nl_clm_base = os.path.join(CESM_ROOT, "cime_config/user_nl_clm")
     nl_clm = os.path.join(user_mods_dir, "user_nl_clm")
     with open(nl_clm_base, "r") as basefile, open(nl_clm, "w") as user_file:
         for line in basefile:
             user_file.write(line)
 
-    nl_datm_base = os.path.join(cesmroot, "components/cdeps/datm/cime_config"
+    nl_datm_base = os.path.join(CESM_ROOT, "components/cdeps/datm/cime_config"
                                           "/user_nl_datm_streams")
     nl_datm = os.path.join(user_mods_dir, "user_nl_datm_streams")
     with open(nl_datm_base, "r") as base_file, open(nl_datm, 'w') as user_file:
@@ -365,7 +368,7 @@ def determine_num_pft (crop):
     return num_pft
 
 
-def setup_files(args, defaults, cesmroot):
+def setup_files(args, defaults):
     """
     Sets up the files and folders needed for this program
     """
@@ -376,7 +379,7 @@ def setup_files(args, defaults, cesmroot):
         os.mkdir(args.out_dir)
 
     if args.create_user_mods:
-        setup_user_mods(args.user_mods_dir, cesmroot)
+        setup_user_mods(args.user_mods_dir, CESM_ROOT)
 
     # DATM data
     datm_type = 'datm_gswp3'
@@ -562,9 +565,9 @@ def main():
 
     # --------------------------------- #
     # parse defaults file
-    cesmroot = path_to_ctsm_root()
+    
     defaults = configparser.ConfigParser()
-    defaults.read(os.path.join(cesmroot, "tools/site_and_regional", DEFAULTS_FILE))
+    defaults.read(args.data_file)
 
     # --------------------------------- #
     myname = getuser()
@@ -574,9 +577,13 @@ def main():
 
     # --------------------------------- #
     # create files and folders necessary and return dictionary of file/folder locations
-    file_dict = setup_files(args, defaults, cesmroot)
+    file_dict = setup_files(args, defaults)
 
     if args.run_type == "point":
         subset_point(args, file_dict)
     elif args.run_type == "region":
         subset_region(args, file_dict)
+
+
+if __name__ == "__main__":
+    main()
