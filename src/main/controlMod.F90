@@ -229,6 +229,13 @@ contains
           fates_inventory_ctrl_filename,                &
           fates_parteh_mode
     
+    ! moss and lichen Flags
+    namelist /clm_inparm/ use_mosslichen,               &
+          use_mosslichen_mode, use_mosslichen_photosyn,  &
+          use_mosslichen_photo_flux, use_mosslichen_water,   &
+          use_mosslichen_rad,         &
+          use_mosslichen_bvoc
+    
    ! Ozone vegetation stress method 
    namelist / clm_inparam / o3_veg_stress_method
 
@@ -711,6 +718,15 @@ contains
     call mpi_bcast (fates_paramfile, len(fates_paramfile) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_parteh_mode, 1, MPI_INTEGER, 0, mpicom, ier)
 
+    ! moss and lichen model
+    call mpi_bcast (use_mosslichen, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_mosslichen_mode, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (use_mosslichen_photosyn, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (use_mosslichen_photo_flux, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (use_mosslichen_water, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (use_mosslichen_rad, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (use_mosslichen_bvoc, 1, MPI_LOGICAL, 0, mpicom, ier)
+
     ! flexibleCN nitrogen model
     call mpi_bcast (use_flexibleCN, 1, MPI_LOGICAL, 0, mpicom, ier)
     ! TODO(bja, 2015-08) need to move some of these into a module with limited scope.
@@ -1065,6 +1081,16 @@ contains
        write(iulog, *) '    use_fates_sp = ', use_fates_sp
        write(iulog, *) '    fates_inventory_ctrl_filename = ',fates_inventory_ctrl_filename
     end if
+    
+    if (use_mosslichen) then
+       write(iulog, *) '    use_mosslichen_mode = ', use_mosslichen_mode
+       write(iulog, *) '    use_mosslichen_photosyn = ', use_mosslichen_photosyn
+       write(iulog, *) '    use_mosslichen_photo_flux = ', use_mosslichen_photo_flux
+       write(iulog, *) '    use_mosslichen_water= ',use_mosslichen_water
+       write(iulog, *) '    use_mosslichen_rad = ',use_mosslichen_rad
+       write(iulog, *) '    use_mosslichen_bvoc = ', use_mosslichen_bvoc
+    end if
+    
   end subroutine control_print
 
 
