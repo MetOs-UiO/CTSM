@@ -26,7 +26,8 @@ module SoilBiogeochemCarbonStateType
      ! all c pools involved in decomposition
      real(r8), pointer :: decomp_cpools_vr_col (:,:,:) ! (gC/m3) vertically-resolved decomposing (litter, cwd, soil) c pools
      real(r8), pointer :: decomp_soilc_vr_col  (:,:)   ! (gC/m3) vertically-resolved decomposing total soil c pool
-     real(r8), pointer :: decomp_doc_vr_col  (:,:)   ! (gC/m3) vertically-resolved decomposing total doc pool
+     real(r8), pointer :: decomp_docpools_vr_col (:,:,:)   ! (gC/m3) vertically-resolved decomposing doc pool
+     real(r8), pointer :: decomp_doc_vr_col (:,:)      ! (gC/m3) vertically-resolved decomposing total doc pool
      real(r8), pointer :: ctrunc_vr_col        (:,:)   ! (gC/m3) vertically-resolved column-level sink for C truncation
 
      ! summary (diagnostic) state variables, not involved in mass balance
@@ -34,7 +35,7 @@ module SoilBiogeochemCarbonStateType
      real(r8), pointer :: totlitc_col          (:)     ! (gC/m2) total litter carbon
      real(r8), pointer :: totlitc_1m_col       (:)     ! (gC/m2) total litter carbon to 1 meter
      real(r8), pointer :: totsomc_col          (:)     ! (gC/m2) total soil organic matter carbon
-     real(r8), pointer :: totdoc_col          (:)     ! (gC/m2) total soil organic matter carbon
+     real(r8), pointer :: totdoc_col          (:)     ! (gC/m2) total dissolved organic carbon
      real(r8), pointer :: totsomc_1m_col       (:)     ! (gC/m2) total soil organic matter carbon to 1 meter
      real(r8), pointer :: cwdc_col             (:)     ! (gC/m2) coarse woody debris C (diagnostic)
      real(r8), pointer :: decomp_cpools_1m_col (:,:)   ! (gC/m2)  Diagnostic: decomposing (litter, cwd, soil) c pools to 1 meter
@@ -107,6 +108,8 @@ contains
 
     allocate(this%decomp_cpools_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))  
     this%decomp_cpools_vr_col(:,:,:)= nan
+    allocate(this%decomp_docpools_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))  
+    this%decomp_docpools_vr_col(:,:,:)= nan
     allocate(this%decomp_soilc_vr_col(begc:endc,1:nlevdecomp_full))  
     this%decomp_soilc_vr_col(:,:)= nan
     allocate(this%decomp_doc_vr_col(begc:endc,1:nlevdecomp_full))  
