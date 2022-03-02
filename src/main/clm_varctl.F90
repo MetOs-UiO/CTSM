@@ -251,12 +251,6 @@ module clm_varctl
                                                              ! use_mosslichen can only be used together with use_fates at the moment
                                                              ! use_mosslichen can also be used with use_cn in the future (not implemented yet)
 
-  !logical, public :: use_mosslichen_veg  = .false.           ! use vegetation representation for water and heat flux of moss&lichen
-  !logical, public :: use_mosslichen_veg_tgtv  = .false.      ! rewire resistence model between soil-mosslichen-atm
-  !logical, public :: use_mosslichen_soil = .true.            ! use soil representation for water and heat flux of moss&lichen
-  !integer, public :: use_mosslichen_soil_layer = 1           ! 
-                                                             ! 3: use top 1-2 soil layers for moss and lichen (not implemented yet)
-                                                             ! 4: use top 1-3 soil layers for moss and lichen (not implemented yet)
   integer, public :: use_mosslichen_mode     = 0             ! how to represent moss and lichen:
                                                              ! 0: vegetation
                                                              ! 1: soil layer 1
