@@ -186,7 +186,7 @@ contains
                      end if
                   end if
                   decomp_cascade_hr_vr(c,j,k) = rf_decomp_cascade(c,j,k) * p_decomp_cpool_loss(c,j,k)
-                  decomp_cascade_doc_vr(c,j,k) = docf_decomp_cascade(c,j,k) * p_decomp_cpool_loss(c,j,k)
+                  decomp_cascade_doc_vr(c,j,k) = docf_decomp_cascade(c,j,k) * p_decomp_cpool_loss(c,j,k) *0.1_r8
                   decomp_cascade_ctransfer_vr(c,j,k) = (1._r8 - rf_decomp_cascade(c,j,k) - docf_decomp_cascade(c,j,k)) * p_decomp_cpool_loss(c,j,k)
                   if (decomp_npools_vr(c,j,cascade_donor_pool(k)) > 0._r8 .and. cascade_receiver_pool(k) /= i_atm) then
                      decomp_cascade_ntransfer_vr(c,j,k) = p_decomp_cpool_loss(c,j,k) / cn_decomp_pools(c,j,cascade_donor_pool(k))
