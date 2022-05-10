@@ -636,6 +636,46 @@ The maximum value to use for zeta under stable conditions
 baseline proportion of nitrogen allocated for electron transport (J)
 </entry>
 
+<entry id="use_mosslichen" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on moss and lichen module.
+</entry>
+
+<entry id="use_mosslichen_mode" type="integer" category="physics"
+        group="clm_inparm" valid_values="0,1,2,3,4">
+how to represent moss and lichen:
+0: vegetation
+1: soil layer 1
+2: soil layer 1-2
+3: soil layer 1-3
+4: Add additional soil layer (not implemented)
+</entry>
+
+<entry id="use_mosslichen_photosyn" type="integer" category="physics"
+        group="clm_inparm" valid_values="0,1,2,3,4">
+How photosynthesis of moss and lichen are treated
+</entry>
+
+<entry id="use_mosslichen_photo_flux" type="integer" category="physics"
+        group="clm_inparm" valid_values="0,1,2,3">
+How the canopy heat and water fluxes are treated while moss and lichen is doing photosynthesis
+</entry>
+
+<entry id="use_mosslichen_water" type="integer" category="physics"
+        group="clm_inparm" valid_values="0,1,2">
+ How water content of moss and lichen is treated
+</entry>
+
+<entry id="use_mosslichen_rad" type="integer" category="physics"
+        group="clm_inparm" valid_values="">
+How radiation (albedo) of moss and lichen is represented
+</entry>
+
+<entry id="use_mosslichen_bvoc" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">
+switch for biogenic emission from moss and lichen (not implemented yet)
+</entry>
+
 <entry id="use_fates" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on the FATES model
