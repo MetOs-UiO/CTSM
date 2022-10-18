@@ -124,6 +124,7 @@ contains
 
          nue_decomp_cascade               => soilbiogeochem_state_inst%nue_decomp_cascade_col                      , & ! Input:  [real(r8) (:)     ]  N use efficiency for a given transition (gN going into microbe / gN decomposed)
          rf_decomp_cascade                => soilbiogeochem_carbonflux_inst%rf_decomp_cascade_col                  , & ! Input:  [real(r8) (:,:,:) ]  respired fraction in decomposition step (frac)
+         df_decomp_cascade                => soilbiogeochem_carbonflux_inst%df_decomp_cascade_col                  , & ! Input:  [real(r8) (:,:,:) ]  doc prod. fraction in decomposition step (frac)
          pathfrac_decomp_cascade          => soilbiogeochem_carbonflux_inst%pathfrac_decomp_cascade_col            , & ! Input:  [real(r8) (:,:,:) ]  what fraction of C passes from donor to receiver pool through a given transition (frac)
 
          decomp_npools_vr                 => soilbiogeochem_nitrogenstate_inst%decomp_npools_vr_col                , & ! Input:  [real(r8) (:,:,:) ]  (gC/m3)  vertically-resolved decomposing (litter, cwd, soil) N pools
@@ -190,7 +191,7 @@ contains
                            ratio = cn_decomp_pools(c,j,cascade_receiver_pool(k))/cn_decomp_pools(c,j,cascade_donor_pool(k))
                         endif
 
-                        pmnf_decomp_cascade(c,j,k) = (p_decomp_cpool_loss(c,j,k) * (1.0_r8 - rf_decomp_cascade(c,j,k) - ratio) &
+                        pmnf_decomp_cascade(c,j,k) = (p_decomp_cpool_loss(c,j,k) * (1.0_r8 - rf_decomp_cascade(c,j,k) - df_decomp_cascade(c,j,k) - ratio) &
                              / cn_decomp_pools(c,j,cascade_receiver_pool(k)) )
 
                      else   ! 100% respiration
@@ -212,7 +213,7 @@ contains
                         ! diff between p_decomp_npool_loss (pertains to
                         ! donor) and p_decomp_npool_gain (receiver)
                         p_decomp_cpool_gain(c,j,k) = &
-                           p_decomp_cpool_loss(c,j,k) * (1.0_r8 - rf_decomp_cascade(c,j,k))
+                           p_decomp_cpool_loss(c,j,k) * (1.0_r8 - rf_decomp_cascade(c,j,k) - df_decomp_cascade(c,j,k))
                         p_decomp_npool_gain(c,j,k) = &
                            p_decomp_npool_loss * nue_decomp_cascade(k)
                         p_decomp_npool_to_din(c,j,k) = &

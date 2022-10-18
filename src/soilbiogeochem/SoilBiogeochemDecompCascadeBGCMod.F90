@@ -63,6 +63,17 @@ module SoilBiogeochemDecompCascadeBGCMod
   real(r8), private :: f_s2s1
   real(r8), private :: f_s2s3
 
+  real(r8) :: df_l1s1
+  real(r8) :: df_l2s1
+  real(r8) :: df_l3s2
+  real(r8) :: df_s1s2
+  real(r8) :: df_s1s3
+  real(r8) :: df_s2s1
+  real(r8) :: df_s2s3
+  real(r8) :: df_s3s1
+  real(r8) :: df_cwdl2
+  real(r8) :: df_cwdl3
+
   integer, private :: i_l1s1
   integer, private :: i_l2s1
   integer, private :: i_l3s2
@@ -87,6 +98,17 @@ module SoilBiogeochemDecompCascadeBGCMod
      real(r8):: rf_s3s1_bgc    
 
      real(r8):: rf_cwdl3_bgc
+
+     real(r8) :: df_l1s1_bgc
+     real(r8) :: df_l2s1_bgc
+     real(r8) :: df_l3s2_bgc
+     real(r8) :: df_s1s2_bgc
+     real(r8) :: df_s1s3_bgc
+     real(r8) :: df_s2s1_bgc
+     real(r8) :: df_s2s3_bgc
+     real(r8) :: df_s3s1_bgc
+     real(r8) :: df_cwdl2_bgc
+     real(r8) :: df_cwdl3_bgc
 
      real(r8):: tau_l1_bgc    ! 1/turnover time of  litter 1 from Century (l/18.5) (1/yr)
      real(r8):: tau_l2_l3_bgc ! 1/turnover time of  litter 2 and litter 3 from Century (1/4.9) (1/yr)
@@ -220,6 +242,56 @@ contains
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%bgc_initial_Cstocks_depth=tempr
 
+    tString='bgc_df_l1s1'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%df_l1s1_bgc=tempr
+
+    tString='bgc_df_l2s1'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%df_l2s1_bgc=tempr
+
+    tString='bgc_df_l3s2'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%df_l3s2_bgc=tempr   
+
+    tString='bgc_df_s1s2'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%df_s1s2_bgc=tempr
+
+    tString='bgc_df_s1s3'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%df_s1s3_bgc=tempr
+
+    tString='bgc_df_s2s1'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%df_s2s1_bgc=tempr
+
+    tString='bgc_df_s2s3'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%df_s2s3_bgc=tempr
+
+    tString='bgc_df_s3s1'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%df_s3s1_bgc=tempr
+
+    tString='bgc_df_cwdl2'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%df_cwdl2_bgc=tempr
+
+    tString='bgc_df_cwdl3'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%df_cwdl3_bgc=tempr
+
   end subroutine readParams
 
   !-----------------------------------------------------------------------
@@ -286,6 +358,18 @@ contains
       rf_s3s1 = params_inst%rf_s3s1_bgc
 
       rf_cwdl3 = params_inst%rf_cwdl3_bgc
+
+      ! set doc fractions for fluxes between compartments
+      df_l1s1 = params_inst%df_l1s1_bgc
+      df_l2s1 = params_inst%df_l2s1_bgc
+      df_l3s2 = params_inst%df_l3s2_bgc
+      df_s1s2 = params_inst%df_s1s2_bgc
+      df_s1s3 = params_inst%df_s1s3_bgc
+      df_s2s1 = params_inst%df_s2s1_bgc
+      df_s2s3 = params_inst%df_s2s3_bgc
+      df_s3s1 = params_inst%df_s3s1_bgc
+      df_cwdl2 = params_inst%df_cwdl2_bgc
+      df_cwdl3 = params_inst%df_cwdl3_bgc
 
       ! set the cellulose and lignin fractions for coarse woody debris
       cwd_fcel = params_inst%cwd_fcel_bgc
@@ -579,8 +663,9 @@ contains
          o2stress_sat   => ch4_inst%o2stress_sat_col                   , & ! Input:  [real(r8) (:,:)   ]  Ratio of oxygen available to that demanded by roots, aerobes, & methanotrophs (nlevsoi)
          o2stress_unsat => ch4_inst%o2stress_unsat_col                 , & ! Input:  [real(r8) (:,:)   ]  Ratio of oxygen available to that demanded by roots, aerobes, & methanotrophs (nlevsoi)
          finundated     => ch4_inst%finundated_col                     , & ! Input:  [real(r8) (:)     ]  fractional inundated area                                
-         rf_decomp_cascade       => soilbiogeochem_carbonflux_inst%rf_decomp_cascade_col                                                               , & ! Output: [real(r8) (:,:,:) ]  respired fraction in decomposition step (frac)
-         pathfrac_decomp_cascade => soilbiogeochem_carbonflux_inst%pathfrac_decomp_cascade_col                                                         , & ! Output: [real(r8) (:,:,:) ]  what fraction of C passes from donor to receiver pool through a given transition (frac)
+         rf_decomp_cascade       => soilbiogeochem_carbonflux_inst%rf_decomp_cascade_col         , & ! Output: [real(r8) (:,:,:) ]  respired fraction in decomposition step (frac)
+         df_decomp_cascade       => soilbiogeochem_carbonflux_inst%df_decomp_cascade_col         , & ! Output: [real(r8) (:,:,:) ]  doc fraction in decomposition step (frac)
+         pathfrac_decomp_cascade => soilbiogeochem_carbonflux_inst%pathfrac_decomp_cascade_col   , & ! Output: [real(r8) (:,:,:) ]  what fraction of C passes from donor to receiver pool through a given transition (frac)
          t_scalar       => soilbiogeochem_carbonflux_inst%t_scalar_col , & ! Output: [real(r8) (:,:)   ]  soil temperature scalar for decomp                     
          w_scalar       => soilbiogeochem_carbonflux_inst%w_scalar_col , & ! Output: [real(r8) (:,:)   ]  soil water scalar for decomp                           
          o_scalar       => soilbiogeochem_carbonflux_inst%o_scalar_col , & ! Output: [real(r8) (:,:)   ]  fraction by which decomposition is limited by anoxia   
@@ -917,6 +1002,8 @@ contains
          pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl3) = cwd_flig
          rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = rf_cwdl2
          rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl3) = rf_cwdl3
+         df_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = df_cwdl2
+         df_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl3) = df_cwdl3
       end if
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1s1) = rf_l1s1
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2s1) = rf_l2s1
@@ -926,6 +1013,15 @@ contains
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s1) = rf_s2s1
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = rf_s2s3
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s1) = rf_s3s1
+
+      df_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1s1) = df_l1s1
+      df_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2s1) = df_l2s1
+      df_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l3s2) = df_l3s2
+      df_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s2) = df_s1s2
+      df_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s3) = df_s1s3
+      df_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s1) = df_s2s1
+      df_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = df_s2s3
+      df_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s1) = df_s3s1
 
     end associate
 
