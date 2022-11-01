@@ -294,12 +294,12 @@ contains
 
     ! export to rof
     if (rof_prognostic) then
-       call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofdom)
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofsur)
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofgwl)
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofsub)
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofi  )
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_irrig )
+       call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofdom)
     end if
 
     ! export to glc if appropriate
@@ -865,10 +865,6 @@ contains
     !               waterlnd2atmbulk_inst%qflx_rofliq_h2osfc_grc(g)
     ! end do
 
-    if (fldchk(exportState, Flrl_rofdom)) then
-       call state_setexport_1d(exportState, Flrl_rofdom, waterlnd2atmbulk_inst%qflx_rofdom_grc(begg:), &
-            init_spval=.true., rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
     if (fldchk(exportState, Flrl_rofsur)) then
        call state_setexport_1d(exportState, Flrl_rofsur, waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc(begg:), &
@@ -901,6 +897,10 @@ contains
        call state_setexport_1d(exportState, Flrl_rofsub, data1d(begg:),  init_spval=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
+    if (fldchk(exportState, Flrl_rofdom)) then
+       call state_setexport_1d(exportState, Flrl_rofdom, waterlnd2atmbulk_inst%qflx_rofdom_grc(begg:), &
+            init_spval=.true., rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! -----------------------
     ! output to glc
