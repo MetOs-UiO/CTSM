@@ -865,7 +865,6 @@ contains
     !               waterlnd2atmbulk_inst%qflx_rofliq_h2osfc_grc(g)
     ! end do
 
-    end if
     if (fldchk(exportState, Flrl_rofsur)) then
        call state_setexport_1d(exportState, Flrl_rofsur, waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc(begg:), &
             init_spval=.true., rc=rc)
@@ -901,6 +900,7 @@ contains
        call state_setexport_1d(exportState, Flrl_rofdom, waterlnd2atmbulk_inst%qflx_rofdom_grc(begg:), &
             init_spval=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    end if
 
     ! -----------------------
     ! output to glc
