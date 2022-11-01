@@ -37,6 +37,7 @@ module lnd2atmMod
   use LandunitType         , only : lun
   use GridcellType         , only : grc
   use landunit_varcon      , only : istice
+  use SoilBiogeochemCarbonFluxType    , only : soilbiogeochem_carbonflux_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -151,7 +152,7 @@ contains
        water_inst, &
        energyflux_inst, solarabs_inst, drydepvel_inst,  &
        vocemis_inst, fireemis_inst, dust_inst, ch4_inst, glc_behavior, &
-       lnd2atm_inst, &
+       lnd2atm_inst, soilbiogeochem_carbonflux_inst, &
        net_carbon_exchange_grc)
     !
     ! !DESCRIPTION:
@@ -177,6 +178,7 @@ contains
     type(glc_behavior_type)     , intent(in)    :: glc_behavior
     type(lnd2atm_type)          , intent(inout) :: lnd2atm_inst
     real(r8)                    , intent(in)    :: net_carbon_exchange_grc( bounds%begg: )  ! net carbon exchange between land and atmosphere, positive for source (gC/m2/s)
+    type(soilbiogeochem_carbonflux_type) , intent(in) :: soilbiogeochem_carbonflux_inst
     !
     ! !LOCAL VARIABLES:
     integer  :: c, g  ! indices
@@ -335,6 +337,10 @@ contains
     !----------------------------------------------------
     ! lnd -> rof
     !----------------------------------------------------
+    call c2g( bounds, &
+         soilbiogeochem_carbonflux_inst%doc_col (bounds%begc:bounds%endc), &
+         water_inst%waterlnd2atmbulk_inst%qflx_rofdom_grc   (bounds%begg:bounds%endg), &
+         c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
 
     call c2g( bounds, &
          water_inst%waterfluxbulk_inst%qflx_surf_col (bounds%begc:bounds%endc), &

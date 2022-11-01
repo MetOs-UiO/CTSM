@@ -133,6 +133,7 @@ module lnd_import_export
   character(*), parameter :: Fall_voc       = 'Fall_voc'
   character(*), parameter :: Fall_fire      = 'Fall_fire'
   character(*), parameter :: Sl_fztop       = 'Sl_fztop'
+  character(*), parameter :: Flrl_rofdom    = 'Flrl_rofdom'
   character(*), parameter :: Flrl_rofsur    = 'Flrl_rofsur'
   character(*), parameter :: Flrl_rofsub    = 'Flrl_rofsub'
   character(*), parameter :: Flrl_rofgwl    = 'Flrl_rofgwl'
@@ -293,6 +294,7 @@ contains
 
     ! export to rof
     if (rof_prognostic) then
+       call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofdom)
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofsur)
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofgwl)
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofsub)
@@ -863,6 +865,11 @@ contains
     !               waterlnd2atmbulk_inst%qflx_rofliq_h2osfc_grc(g)
     ! end do
 
+    if (fldchk(exportState, Flrl_rofdom)) then
+       call state_setexport_1d(exportState, Flrl_rofdom, waterlnd2atmbulk_inst%qflx_rofdom_grc(begg:), &
+            init_spval=.true., rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    end if
     if (fldchk(exportState, Flrl_rofsur)) then
        call state_setexport_1d(exportState, Flrl_rofsur, waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc(begg:), &
             init_spval=.true., rc=rc)

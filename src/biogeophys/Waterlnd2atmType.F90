@@ -36,6 +36,7 @@ module Waterlnd2atmType
      real(r8), pointer :: qflx_rofice_grc    (:)   ! rof ice forcing, grc level
      real(r8), pointer :: qflx_liq_from_ice_col(:) ! liquid runoff from converted ice runoff
      real(r8), pointer :: qirrig_grc         (:)   ! irrigation flux
+     real(r8), pointer :: qflx_rofdom_grc    (:)   ! rof DOM
 
    contains
 
@@ -133,6 +134,10 @@ contains
          bounds = bounds, subgrid_level = subgrid_level_column, &
          ival=ival)
     call AllocateVar1d(var = this%qirrig_grc, name = 'qirrig_grc', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = subgrid_level_gridcell, &
+         ival=ival)
+    call AllocateVar1d(var = this%qflx_rofdom_grc, name = 'qflx_rofdom_grc', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = subgrid_level_gridcell, &
          ival=ival)
