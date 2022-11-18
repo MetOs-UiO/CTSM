@@ -133,7 +133,7 @@ module lnd_import_export
   character(*), parameter :: Fall_voc       = 'Fall_voc'
   character(*), parameter :: Fall_fire      = 'Fall_fire'
   character(*), parameter :: Sl_fztop       = 'Sl_fztop'
-  character(*), parameter :: Flrl_rofdom    = 'Flrl_rofdom'
+  character(*), parameter :: Flrl_rofdoc    = 'Flrl_rofdoc'
   character(*), parameter :: Flrl_rofsur    = 'Flrl_rofsur'
   character(*), parameter :: Flrl_rofsub    = 'Flrl_rofsub'
   character(*), parameter :: Flrl_rofgwl    = 'Flrl_rofgwl'
@@ -299,7 +299,7 @@ contains
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofsub)
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofi  )
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_irrig )
-       call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofdom)
+       call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofdoc)
     end if
 
     ! export to glc if appropriate
@@ -896,8 +896,8 @@ contains
        call state_setexport_1d(exportState, Flrl_rofsub, data1d(begg:),  init_spval=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
-    if (fldchk(exportState, Flrl_rofdom)) then
-       call state_setexport_1d(exportState, Flrl_rofdom, waterlnd2atmbulk_inst%qflx_rofdom_grc(begg:), &
+    if (fldchk(exportState, Flrl_rofdoc)) then
+       call state_setexport_1d(exportState, Flrl_rofdoc, waterlnd2atmbulk_inst%qflx_rofdoc_grc(begg:), &
             init_spval=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if

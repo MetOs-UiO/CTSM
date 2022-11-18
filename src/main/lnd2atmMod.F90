@@ -339,7 +339,7 @@ contains
     !----------------------------------------------------
     call c2g( bounds, &
          soilbiogeochem_carbonflux_inst%doc_col (bounds%begc:bounds%endc), &
-         water_inst%waterlnd2atmbulk_inst%qflx_rofdom_grc   (bounds%begg:bounds%endg), &
+         water_inst%waterlnd2atmbulk_inst%qflx_rofdoc_grc   (bounds%begg:bounds%endg), &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
 
     call c2g( bounds, &
