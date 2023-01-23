@@ -338,8 +338,13 @@ contains
     ! lnd -> rof
     !----------------------------------------------------
     call c2g( bounds, &
-         soilbiogeochem_carbonflux_inst%doc_col (bounds%begc:bounds%endc), &
-         water_inst%waterlnd2atmbulk_inst%qflx_rofdoc_grc   (bounds%begg:bounds%endg), &
+         soilbiogeochem_carbonflux_inst%surfdoc_col (bounds%begc:bounds%endc), &
+         water_inst%waterlnd2atmbulk_inst%qflx_surfdoc_grc   (bounds%begg:bounds%endg), &
+         c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
+
+    call c2g( bounds, &
+         soilbiogeochem_carbonflux_inst%subdoc_col (bounds%begc:bounds%endc), &
+         water_inst%waterlnd2atmbulk_inst%qflx_subdoc_grc   (bounds%begg:bounds%endg), &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
 
     call c2g( bounds, &

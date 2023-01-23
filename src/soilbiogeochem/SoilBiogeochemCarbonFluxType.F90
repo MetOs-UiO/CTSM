@@ -35,6 +35,8 @@ module SoilBiogeochemCarbonFluxType
      real(r8), pointer :: decomp_cascade_hr_col                     (:,:)   ! vertically-integrated (diagnostic) het. resp. from decomposing C pools (gC/m2/s)
      real(r8), pointer :: decomp_cascade_doc_vr_col                 (:,:,:) ! vertically-resolved DOC production from decomposing C pools (gC/m3/s)
      real(r8), pointer :: decomp_cascade_doc_col                    (:,:)   ! vertically-integrated DOC from decomposing C pools (gC/m2/s)
+     real(r8), pointer :: decomp_cascade_surfdoc_col                (:,:)   ! vertically-integrated surface DOC from decomposing C pools (gC/m2/s)
+     real(r8), pointer :: decomp_cascade_subdoc_col                 (:,:)   ! vertically-integrated subsurface DOC from decomposing C pools (gC/m2/s)
      real(r8), pointer :: decomp_cascade_ctransfer_vr_col           (:,:,:) ! vertically-resolved C transferred along deomposition cascade (gC/m3/s)
      real(r8), pointer :: decomp_cascade_ctransfer_col              (:,:)   ! vertically-integrated (diagnostic) C transferred along decomposition cascade (gC/m2/s)
      real(r8), pointer :: cn_col                                    (:,:)   ! (gC/gN) C:N ratio by pool
@@ -58,8 +60,12 @@ module SoilBiogeochemCarbonFluxType
 
      real(r8), pointer :: hr_col                                    (:)     ! (gC/m2/s) total heterotrophic respiration
      real(r8), pointer :: doc_col                                   (:)     ! (gC/m2/s) total DOC prduction
-     real(r8), pointer :: ldoc_col                                  (:)     ! (gC/m2/s) Labile DOC: definition based on donor pool
-     real(r8), pointer :: rdoc_col                                  (:)     ! (gC/m2/s) Recalcitrant DOC: definition based on donor pool
+     real(r8), pointer :: surfdoc_col                               (:)     ! (gC/m2/s) total surface DOC prduction
+     real(r8), pointer :: subdoc_col                                (:)     ! (gC/m2/s) total subsurface DOC prduction
+     real(r8), pointer :: ldoc_surf_col                             (:)     ! (gC/m2/s) Labile surface DOC: definition based on donor pool
+     real(r8), pointer :: ldoc_sub_col                              (:)     ! (gC/m2/s) Labile subsurface DOC: definition based on donor pool
+     real(r8), pointer :: rdoc_surf_col                             (:)     ! (gC/m2/s) Recalcitrant surface DOC: definition based on donor pool
+     real(r8), pointer :: rdoc_sub_col                              (:)     ! (gC/m2/s) Recalcitrant subsurface DOC: definition based on donor pool
      real(r8), pointer :: michr_col                                 (:)     ! (gC/m2/s) microbial heterotrophic respiration: donor-pool based definition, so expect it to be zero with MIMICS; microbial decomposition is responsible for heterotrophic respiration of donor pools (litter and soil), but in the accounting we assign it to the donor pool for consistency with CENTURY
      real(r8), pointer :: cwdhr_col                                 (:)     ! (gC/m2/s) coarse woody debris heterotrophic respiration: donor-pool based definition
      real(r8), pointer :: lithr_col                                 (:)     ! (gC/m2/s) litter heterotrophic respiration: donor-pool based definition
@@ -146,6 +152,12 @@ contains
      allocate(this%decomp_cascade_doc_col(begc:endc,1:ndecomp_cascade_transitions))                             
      this%decomp_cascade_doc_col(:,:)= nan
 
+     allocate(this%decomp_cascade_surfdoc_col(begc:endc,1:ndecomp_cascade_transitions))                             
+     this%decomp_cascade_surfdoc_col(:,:)= nan
+
+     allocate(this%decomp_cascade_subdoc_col(begc:endc,1:ndecomp_cascade_transitions))                             
+     this%decomp_cascade_subdoc_col(:,:)= nan
+
      allocate(this%decomp_cascade_ctransfer_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions)) 
      this%decomp_cascade_ctransfer_vr_col(:,:,:)= nan
 
@@ -175,8 +187,12 @@ contains
 
      allocate(this%hr_col                  (begc:endc)) ; this%hr_col                  (:) = nan
      allocate(this%doc_col                 (begc:endc)) ; this%doc_col                 (:) = nan
-     allocate(this%ldoc_col                (begc:endc)) ; this%ldoc_col                (:) = nan
-     allocate(this%rdoc_col                (begc:endc)) ; this%rdoc_col                (:) = nan
+     allocate(this%surfdoc_col             (begc:endc)) ; this%surfdoc_col             (:) = nan
+     allocate(this%subdoc_col              (begc:endc)) ; this%subdoc_col              (:) = nan
+     allocate(this%ldoc_surf_col           (begc:endc)) ; this%ldoc_surf_col           (:) = nan
+     allocate(this%ldoc_sub_col            (begc:endc)) ; this%ldoc_sub_col            (:) = nan
+     allocate(this%rdoc_surf_col           (begc:endc)) ; this%rdoc_surf_col           (:) = nan
+     allocate(this%rdoc_sub_col            (begc:endc)) ; this%rdoc_sub_col            (:) = nan
      allocate(this%michr_col               (begc:endc)) ; this%michr_col               (:) = nan
      allocate(this%cwdhr_col               (begc:endc)) ; this%cwdhr_col               (:) = nan
      allocate(this%lithr_col               (begc:endc)) ; this%lithr_col               (:) = nan
@@ -262,15 +278,15 @@ contains
              avgflag='A', long_name='total DOC production', &
              ptr_col=this%doc_col)
 
-        this%ldoc_col(begc:endc) = spval
-        call hist_addfld1d (fname='LAB_DOC', units='gC/m^2/s', &
-             avgflag='A', long_name='Labile DOC production', &
-             ptr_col=this%ldoc_col)
+        this%surfdoc_col(begc:endc) = spval
+        call hist_addfld1d (fname='DOC_SURFACE', units='gC/m^2/s', &
+             avgflag='A', long_name='total surface DOC production', &
+             ptr_col=this%surfdoc_col)
 
-        this%rdoc_col(begc:endc) = spval
-        call hist_addfld1d (fname='REC_DOC', units='gC/m^2/s', &
-             avgflag='A', long_name='Recalcitrant DOC production', &
-             ptr_col=this%rdoc_col)
+        this%subdoc_col(begc:endc) = spval
+        call hist_addfld1d (fname='DOC_SUBSURFACE', units='gC/m^2/s', &
+             avgflag='A', long_name='total subsurface DOC production', &
+             ptr_col=this%subdoc_col)
 
         if (decomp_method == mimics_decomp) then
            this%michr_col(begc:endc) = spval
@@ -319,6 +335,8 @@ contains
         this%decomp_cascade_hr_col(begc:endc,:)             = spval
         this%decomp_cascade_hr_vr_col(begc:endc,:,:)        = spval
         this%decomp_cascade_doc_col(begc:endc,:)            = spval
+        this%decomp_cascade_surfdoc_col(begc:endc,:)        = spval
+        this%decomp_cascade_subdoc_col(begc:endc,:)         = spval
         this%decomp_cascade_doc_vr_col(begc:endc,:,:)       = spval
         this%decomp_cascade_ctransfer_col(begc:endc,:)      = spval
         this%decomp_cascade_ctransfer_vr_col(begc:endc,:,:) = spval
@@ -845,6 +863,8 @@ contains
              i = filter_column(fi)
              this%decomp_cascade_hr_col(i,l)             = value_column
              this%decomp_cascade_doc_col(i,l)            = value_column
+             this%decomp_cascade_surfdoc_col(i,l)        = value_column
+             this%decomp_cascade_subdoc_col(i,l)         = value_column
              this%c_overflow_vr(i,j,l)                   = value_column
              this%decomp_cascade_hr_vr_col(i,j,l)        = value_column
              this%decomp_cascade_doc_vr_col(i,j,l)       = value_column
@@ -889,8 +909,12 @@ contains
        i = filter_column(fi)
        this%hr_col(i)            = value_column
        this%doc_col(i)           = value_column
-       this%ldoc_col(i)          = value_column
-       this%rdoc_col(i)          = value_column
+       this%surfdoc_col(i)       = value_column
+       this%subdoc_col(i)        = value_column
+       this%ldoc_surf_col(i)     = value_column
+       this%ldoc_sub_col(i)      = value_column
+       this%rdoc_surf_col(i)     = value_column
+       this%rdoc_sub_col(i)      = value_column
        this%somc_fire_col(i)     = value_column  
        this%som_c_leached_col(i) = value_column
        this%somhr_col(i)         = value_column
@@ -951,21 +975,28 @@ contains
 
     ! vertically integrate HR, DOC and decomposition cascade fluxes
     do k = 1, ndecomp_cascade_transitions
-       do j = 1,nlevdecomp
-          do fc = 1,num_soilc
-             c = filter_soilc(fc)
+       do fc = 1,num_soilc
+          c = filter_soilc(fc)
+          do j = 1,nlevdecomp
              this%decomp_cascade_hr_col(c,k) = &
                   this%decomp_cascade_hr_col(c,k) + &
                   this%decomp_cascade_hr_vr_col(c,j,k) * dzsoi_decomp(j) 
-
-             this%decomp_cascade_doc_col(c,k) = &
-                  this%decomp_cascade_doc_col(c,k) + &
-                  this%decomp_cascade_doc_vr_col(c,j,k) * dzsoi_decomp(j) 
+             if (j==1) then
+                this%decomp_cascade_surfdoc_col(c,k) = &
+                    this%decomp_cascade_surfdoc_col(c,k) + &
+                    this%decomp_cascade_doc_vr_col(c,j,k) * dzsoi_decomp(j) 
+             else
+                this%decomp_cascade_subdoc_col(c,k) = &
+                    this%decomp_cascade_subdoc_col(c,k) + &
+                    this%decomp_cascade_doc_vr_col(c,j,k) * dzsoi_decomp(j) 
+             endif
 
              this%decomp_cascade_ctransfer_col(c,k) = &
                   this%decomp_cascade_ctransfer_col(c,k) + &
                   this%decomp_cascade_ctransfer_vr_col(c,j,k) * dzsoi_decomp(j) 
           end do
+          this%decomp_cascade_doc_col(c,k) = &
+             this%decomp_cascade_surfdoc_col(c,k) + this%decomp_cascade_subdoc_col(c,k)
        end do
     end do
 
@@ -1066,7 +1097,8 @@ contains
               is_cwd(decomp_cascade_con%cascade_donor_pool(k))) then
             do fc = 1,num_soilc
                c = filter_soilc(fc)
-               this%ldoc_col(c) = this%ldoc_col(c) + this%decomp_cascade_doc_col(c,k)
+               this%ldoc_surf_col(c) = this%ldoc_surf_col(c) + this%decomp_cascade_surfdoc_col(c,k)
+               this%ldoc_sub_col(c) = this%ldoc_sub_col(c) + this%decomp_cascade_subdoc_col(c,k)
             end do
          end if
       end do
@@ -1078,7 +1110,8 @@ contains
          if ( is_soil(decomp_cascade_con%cascade_donor_pool(k)) ) then
             do fc = 1,num_soilc
                c = filter_soilc(fc)
-               this%rdoc_col(c) = this%rdoc_col(c) + this%decomp_cascade_doc_col(c,k)
+               this%rdoc_surf_col(c) = this%rdoc_surf_col(c) + this%decomp_cascade_surfdoc_col(c,k)
+               this%rdoc_sub_col(c) = this%rdoc_sub_col(c) + this%decomp_cascade_subdoc_col(c,k)
             end do
          end if
       end do
@@ -1093,10 +1126,15 @@ contains
                this%cwdhr_col(c) + &
                this%lithr_col(c) + &
                this%somhr_col(c)
+          this%surfdoc_col(c) = &
+               this%ldoc_surf_col(c) + &
+               this%rdoc_surf_col(c)
+          this%subdoc_col(c) = &
+               this%ldoc_sub_col(c) + &
+               this%rdoc_sub_col(c)
           this%doc_col(c) = &
-               this%ldoc_col(c) + &
-               this%rdoc_col(c)
-       
+               this%subdoc_col(c) + &
+               this%surfdoc_col(c)
        end do
 
     ! Calculate ligninNratio
