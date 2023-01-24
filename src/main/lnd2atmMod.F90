@@ -183,6 +183,8 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: c, g  ! indices
     real(r8) :: eflx_sh_ice_to_liq_grc(bounds%begg:bounds%endg) ! sensible heat flux generated from the ice to liquid conversion, averaged to gridcell
+    real(r8) :: temp_surfdoc_col(bounds%begg:bounds%endg) ! Temporary surface DOC variable
+    real(r8) :: temp_subdoc_col(bounds%begg:bounds%endg)  ! Temporary sub-surface DOC variable
     real(r8), parameter :: amC   = 12.0_r8 ! Atomic mass number for Carbon
     real(r8), parameter :: amO   = 16.0_r8 ! Atomic mass number for Oxygen
     real(r8), parameter :: amCO2 = amC + 2.0_r8*amO ! Atomic mass number for CO2
@@ -337,13 +339,29 @@ contains
     !----------------------------------------------------
     ! lnd -> rof
     !----------------------------------------------------
+    do c = bounds%begc, bounds%endc ! only send to MOSART some DOC if there is enough runoff, the rest remains in CTSM
+     temp_surfdoc_col(c)=0._r8
+     temp_subdoc_col(c)=0._r8
+         if (water_inst%waterfluxbulk_inst%qflx_surf_col(c)>0._r8) then
+            temp_surfdoc_col(c)=min(water_inst%waterfluxbulk_inst%qflx_surf_col(c)*0.3_r8,soilbiogeochem_carbonflux_inst%surfdoc_col(c))
+            soilbiogeochem_carbonflux_inst%surfdoc_col(c)=soilbiogeochem_carbonflux_inst%surfdoc_col(c)-temp_surfdoc_col(c)
+         else
+            temp_surfdoc_col(c)=0._r8
+         endif
+         if (water_inst%waterfluxbulk_inst%qflx_drain_col(c)>0._r8) then
+            temp_subdoc_col(c)=min(water_inst%waterfluxbulk_inst%qflx_drain_col(c)*0.3_r8,soilbiogeochem_carbonflux_inst%subdoc_col(c))
+            soilbiogeochem_carbonflux_inst%subdoc_col(c)=soilbiogeochem_carbonflux_inst%subdoc_col(c)-temp_subdoc_col(c)
+         else
+            temp_subdoc_col(c)=0._r8
+       endif
+    end do
     call c2g( bounds, &
-         soilbiogeochem_carbonflux_inst%surfdoc_col (bounds%begc:bounds%endc), &
+         temp_surfdoc_col (bounds%begc:bounds%endc), &
          water_inst%waterlnd2atmbulk_inst%qflx_surfdoc_grc   (bounds%begg:bounds%endg), &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
 
     call c2g( bounds, &
-         soilbiogeochem_carbonflux_inst%subdoc_col (bounds%begc:bounds%endc), &
+         temp_subdoc_col (bounds%begc:bounds%endc), &
          water_inst%waterlnd2atmbulk_inst%qflx_subdoc_grc   (bounds%begg:bounds%endg), &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
 
