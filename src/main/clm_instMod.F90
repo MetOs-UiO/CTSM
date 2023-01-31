@@ -352,7 +352,7 @@ contains
 
     ! Once namelist options are added to control the soil water retention curve method,
     ! we'll need to either pass the namelist file as an argument to this routine, or pass
-    ! the namelist value itself (if the namelist is read elsewhere).
+    ! The namelist value itself (if the namelist is read elsewhere).
 
     allocate(soil_water_retention_curve, &
          source=create_soil_water_retention_curve())
@@ -370,9 +370,8 @@ contains
     call fireemis_inst%Init(bounds)
 
     call drydepvel_inst%Init(bounds)
-
+       write(iulog,*) 'CHECK: clm inst',decomp_method
     if (decomp_method /= no_soil_decomp) then
-
        ! Initialize soilbiogeochem_state_inst
 
        call soilbiogeochem_state_inst%Init(bounds)

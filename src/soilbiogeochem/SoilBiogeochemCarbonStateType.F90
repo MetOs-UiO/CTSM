@@ -32,6 +32,8 @@ module SoilBiogeochemCarbonStateType
      ! summary (diagnostic) state variables, not involved in mass balance
      real(r8), pointer :: ctrunc_col              (:)     ! (gC/m2) column-level sink for C truncation
      real(r8), pointer :: totmicc_col             (:)     ! (gC/m2) total microbial carbon
+     real(r8), pointer :: surfdoc_acc_col         (:)     ! (gC/m2/s) Accumulated doc
+     real(r8), pointer :: subdoc_acc_col          (:)     ! (gC/m2/s) Accumulated doc
      real(r8), pointer :: totlitc_col             (:)     ! (gC/m2) total litter carbon
      real(r8), pointer :: totlitc_1m_col          (:)     ! (gC/m2) total litter carbon to 1 meter
      real(r8), pointer :: totsomc_col             (:)     ! (gC/m2) total soil organic matter carbon
@@ -125,6 +127,8 @@ contains
     allocate(this%totlitc_1m_col (begc :endc)) ; this%totlitc_1m_col (:) = nan
     allocate(this%totsomc_1m_col (begc :endc)) ; this%totsomc_1m_col (:) = nan
     allocate(this%dyn_cbal_adjustments_col (begc:endc)) ; this%dyn_cbal_adjustments_col (:) = nan
+    allocate(this%surfdoc_acc_col(begc :endc)) ; this%surfdoc_acc_col(:) = nan
+    allocate(this%subdoc_acc_col (begc :endc)) ; this%subdoc_acc_col (:) = nan
 
     this%restart_file_spinup_state = huge(1)
 
@@ -248,6 +252,15 @@ contains
             long_name='Adjustments in soil carbon due to dynamic column areas; &
             &only makes sense at the column level: should not be averaged to gridcell', &
             ptr_col=this%dyn_cbal_adjustments_col, default='inactive')
+
+       this%surfdoc_acc_col(begc:endc) = spval
+       call hist_addfld1d (fname='DOC_SURFACE_ACC', units='gC/m^2/s', &
+            avgflag='A', long_name='Accumulated surface DOC', &
+            ptr_col=this%surfdoc_acc_col)
+       this%subdoc_acc_col(begc:endc) = spval
+       call hist_addfld1d (fname='DOC_SUBSURFACE_ACC', units='gC/m^2/s', &
+            avgflag='A', long_name='Accumulated subsurface DOC', &
+            ptr_col=this%subdoc_acc_col)
 
    end if
 
@@ -536,6 +549,8 @@ contains
              this%totsomc_col(c)    = 0._r8
              this%totlitc_1m_col(c) = 0._r8
              this%totsomc_1m_col(c) = 0._r8
+             this%surfdoc_acc_col(c)= 0._r8
+             this%subdoc_acc_col(c) = 0._r8
           end if
        end if
     end do
@@ -818,6 +833,8 @@ contains
        if ( .not. use_fates ) then
           this%cwdc_col(i)       = value_column
        end if
+       this%surfdoc_acc_col(i)= value_column
+       this%subdoc_acc_col(i) = value_column
        this%ctrunc_col(i)     = value_column
        this%totmicc_col(i)    = value_column
        this%totlitc_col(i)    = value_column

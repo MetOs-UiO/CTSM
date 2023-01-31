@@ -15,6 +15,7 @@ module SoilBiogeochemCarbonFluxType
   use LandunitType                       , only : lun
   use SparseMatrixMultiplyMod            , only : sparse_matrix_type, diag_matrix_type, vector_type
   use clm_varctl                         , only : use_fates
+  use clm_varctl                         , only : iulog
   
   ! 
   ! !PUBLIC TYPES:
@@ -99,7 +100,6 @@ contains
      class(soilbiogeochem_carbonflux_type) :: this
      type(bounds_type), intent(in) :: bounds  
      character(len=3) , intent(in) :: carbon_type ! one of ['c12', c13','c14']
-
      call this%InitAllocate ( bounds)
      call this%InitHistory ( bounds, carbon_type )
      call this%InitCold (bounds )
@@ -941,7 +941,6 @@ contains
     ! !USES:
     use subgridAveMod, only: p2c
     use CNSharedParamsMod, only: CNParamsShareInst
-
     ! !ARGUMENTS:
     class(soilbiogeochem_carbonflux_type)           :: this
     type(bounds_type)               , intent(in)    :: bounds          
@@ -1133,8 +1132,10 @@ contains
                this%ldoc_sub_col(c) + &
                this%rdoc_sub_col(c)
           this%doc_col(c) = &
-               this%subdoc_col(c) + &
-               this%surfdoc_col(c)
+          this%ldoc_surf_col(c) + &
+          this%rdoc_surf_col(c) + &
+          this%ldoc_sub_col(c) + &
+          this%rdoc_sub_col(c)
        end do
 
     ! Calculate ligninNratio

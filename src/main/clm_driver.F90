@@ -1107,7 +1107,6 @@ contains
           ! for leaf photosynthetic acclimation temperature. These
           ! moving averages are updated here
           call clm_fates%WrapUpdateFatesRmean(nc,temperature_inst)
-
           call EDBGCDyn(bounds_clump,                                                              &
                filter(nc)%num_soilc, filter(nc)%soilc,                                             &
                filter(nc)%num_soilp, filter(nc)%soilp,                                             &
@@ -1299,13 +1298,13 @@ contains
     ! explicit bounds seemed to be needed to get around other compiler bugs.
     allocate(net_carbon_exchange_grc(bounds_proc%begg:bounds_proc%endg))
     net_carbon_exchange_grc = bgc_vegetation_inst%get_net_carbon_exchange_grc(bounds_proc)
-
+    write(iulog,*) 'Enter LND2ATM CHECK'
     call lnd2atm(bounds_proc,                                            &
          atm2lnd_inst, surfalb_inst, temperature_inst, frictionvel_inst, &
          water_inst, &
          energyflux_inst, solarabs_inst, drydepvel_inst,       &
          vocemis_inst, fireemis_inst, dust_inst, ch4_inst, glc_behavior, &
-         lnd2atm_inst, soilbiogeochem_carbonflux_inst, &
+         lnd2atm_inst, soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
          net_carbon_exchange_grc = net_carbon_exchange_grc(bounds_proc%begg:bounds_proc%endg))
     deallocate(net_carbon_exchange_grc)
     call t_stopf('lnd2atm')

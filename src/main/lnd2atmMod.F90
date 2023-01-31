@@ -38,6 +38,7 @@ module lnd2atmMod
   use GridcellType         , only : grc
   use landunit_varcon      , only : istice
   use SoilBiogeochemCarbonFluxType    , only : soilbiogeochem_carbonflux_type
+  use SoilBiogeochemCarbonStateType    , only : soilbiogeochem_carbonstate_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -152,7 +153,7 @@ contains
        water_inst, &
        energyflux_inst, solarabs_inst, drydepvel_inst,  &
        vocemis_inst, fireemis_inst, dust_inst, ch4_inst, glc_behavior, &
-       lnd2atm_inst, soilbiogeochem_carbonflux_inst, &
+       lnd2atm_inst, soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
        net_carbon_exchange_grc)
     !
     ! !DESCRIPTION:
@@ -178,6 +179,7 @@ contains
     type(glc_behavior_type)     , intent(in)    :: glc_behavior
     type(lnd2atm_type)          , intent(inout) :: lnd2atm_inst
     real(r8)                    , intent(in)    :: net_carbon_exchange_grc( bounds%begg: )  ! net carbon exchange between land and atmosphere, positive for source (gC/m2/s)
+    type(soilbiogeochem_carbonstate_type) , intent(inout) :: soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_carbonflux_type) , intent(in) :: soilbiogeochem_carbonflux_inst
     !
     ! !LOCAL VARIABLES:
@@ -339,21 +341,22 @@ contains
     !----------------------------------------------------
     ! lnd -> rof
     !----------------------------------------------------
+    temp_surfdoc_col(:)=0._r8
+    temp_subdoc_col(:)=0._r8
     do c = bounds%begc, bounds%endc ! only send to MOSART some DOC if there is enough runoff, the rest remains in CTSM
-     temp_surfdoc_col(c)=0._r8
-     temp_subdoc_col(c)=0._r8
+         write(iulog,*) 'LND2ATM CHECK SURF','flux',soilbiogeochem_carbonflux_inst%surfdoc_col(c),'water',water_inst%waterfluxbulk_inst%qflx_surf_col(c),'state',soilbiogeochem_carbonstate_inst%surfdoc_acc_col(c)
+         soilbiogeochem_carbonstate_inst%surfdoc_acc_col(c)=soilbiogeochem_carbonstate_inst%surfdoc_acc_col(c)+soilbiogeochem_carbonflux_inst%surfdoc_col(c)
          if (water_inst%waterfluxbulk_inst%qflx_surf_col(c)>0._r8) then
-            temp_surfdoc_col(c)=min(water_inst%waterfluxbulk_inst%qflx_surf_col(c)*0.3_r8,soilbiogeochem_carbonflux_inst%surfdoc_col(c))
-            soilbiogeochem_carbonflux_inst%surfdoc_col(c)=soilbiogeochem_carbonflux_inst%surfdoc_col(c)-temp_surfdoc_col(c)
-         else
-            temp_surfdoc_col(c)=0._r8
+            temp_surfdoc_col(c)=max(0._r8,min(water_inst%waterfluxbulk_inst%qflx_surf_col(c)*0.3_r8,soilbiogeochem_carbonstate_inst%surfdoc_acc_col(c)))
+            soilbiogeochem_carbonstate_inst%surfdoc_acc_col(c)=soilbiogeochem_carbonstate_inst%surfdoc_acc_col(c)-temp_surfdoc_col(c)
          endif
-         if (water_inst%waterfluxbulk_inst%qflx_drain_col(c)>0._r8) then
-            temp_subdoc_col(c)=min(water_inst%waterfluxbulk_inst%qflx_drain_col(c)*0.3_r8,soilbiogeochem_carbonflux_inst%subdoc_col(c))
-            soilbiogeochem_carbonflux_inst%subdoc_col(c)=soilbiogeochem_carbonflux_inst%subdoc_col(c)-temp_subdoc_col(c)
-         else
-            temp_subdoc_col(c)=0._r8
-       endif
+         write(iulog,*) 'LND2ATM CHECK SUB','flux',soilbiogeochem_carbonflux_inst%subdoc_col(c),'water',water_inst%waterfluxbulk_inst%qflx_drain_col(c)+water_inst%waterfluxbulk_inst%qflx_drain_perched_col(c),'state',soilbiogeochem_carbonstate_inst%subdoc_acc_col(c)
+         soilbiogeochem_carbonstate_inst%subdoc_acc_col(c)=soilbiogeochem_carbonstate_inst%subdoc_acc_col(c)+soilbiogeochem_carbonflux_inst%subdoc_col(c)
+         if ((water_inst%waterfluxbulk_inst%qflx_drain_col(c)+water_inst%waterfluxbulk_inst%qflx_drain_perched_col(c))>0._r8) then
+            temp_subdoc_col(c)=max(0._r8,min((water_inst%waterfluxbulk_inst%qflx_drain_col(c)+water_inst%waterfluxbulk_inst%qflx_drain_perched_col(c)) &
+            *0.3_r8,soilbiogeochem_carbonstate_inst%subdoc_acc_col(c)))
+            soilbiogeochem_carbonstate_inst%subdoc_acc_col(c)=soilbiogeochem_carbonstate_inst%subdoc_acc_col(c)-temp_subdoc_col(c)
+         endif
     end do
     call c2g( bounds, &
          temp_surfdoc_col (bounds%begc:bounds%endc), &

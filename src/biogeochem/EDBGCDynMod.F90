@@ -5,7 +5,7 @@ module EDBGCDynMod
 ! functionality.
 
   use shr_kind_mod                    , only : r8 => shr_kind_r8
-  use clm_varctl                      , only : use_c13, use_c14, use_fates
+  use clm_varctl                      , only : use_c13, use_c14, use_fates,iulog
   use decompMod                       , only : bounds_type
   use perf_mod                        , only : t_startf, t_stopf
   use shr_log_mod                     , only : errMsg => shr_log_errMsg
@@ -179,7 +179,6 @@ contains
     !--------------------------------------------
     ! Soil Biogeochemistry
     !--------------------------------------------
-
     if (decomp_method == century_decomp) then
        call decomp_rate_constants_bgc(bounds, num_soilc, filter_soilc, &
             soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
@@ -218,7 +217,6 @@ contains
 
     if ( decomp_method /= no_soil_decomp )then
        call t_startf('SoilBiogeochemDecomp')
-
        call SoilBiogeochemDecomp (bounds, num_soilc, filter_soilc,                                                       &
             soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst,                  &
             soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst,                                         &
@@ -339,7 +337,6 @@ contains
     ! ----------------------------------------------
     ! soilbiogeochem carbon/nitrogen state summary
     ! ----------------------------------------------
-
     call soilbiogeochem_carbonstate_inst%summary(bounds, num_soilc, filter_soilc)
     if ( use_c13 ) then
        call c13_soilbiogeochem_carbonstate_inst%summary(bounds, num_soilc, filter_soilc)
