@@ -185,8 +185,8 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: c, g  ! indices
     real(r8) :: eflx_sh_ice_to_liq_grc(bounds%begg:bounds%endg) ! sensible heat flux generated from the ice to liquid conversion, averaged to gridcell
-    real(r8) :: temp_surfdoc_col(bounds%begg:bounds%endg) ! Temporary surface DOC variable
-    real(r8) :: temp_subdoc_col(bounds%begg:bounds%endg)  ! Temporary sub-surface DOC variable
+    real(r8) :: temp_surfdoc_col(bounds%begc:bounds%endc) ! Temporary surface DOC variable
+    real(r8) :: temp_subdoc_col(bounds%begc:bounds%endc)  ! Temporary sub-surface DOC variable
     real(r8), parameter :: amC   = 12.0_r8 ! Atomic mass number for Carbon
     real(r8), parameter :: amO   = 16.0_r8 ! Atomic mass number for Oxygen
     real(r8), parameter :: amCO2 = amC + 2.0_r8*amO ! Atomic mass number for CO2
@@ -341,16 +341,17 @@ contains
     !----------------------------------------------------
     ! lnd -> rof
     !----------------------------------------------------
-    temp_surfdoc_col(:)=0._r8
-    temp_subdoc_col(:)=0._r8
     do c = bounds%begc, bounds%endc ! only send to MOSART some DOC if there is enough runoff, the rest remains in CTSM
-         write(iulog,*) 'LND2ATM CHECK SURF','flux',soilbiogeochem_carbonflux_inst%surfdoc_col(c),'water',water_inst%waterfluxbulk_inst%qflx_surf_col(c),'state',soilbiogeochem_carbonstate_inst%surfdoc_acc_col(c)
+         !write(iulog,*) 'LND2ATM CHECK SURF','flux',soilbiogeochem_carbonflux_inst%surfdoc_col(c),'water',water_inst%waterfluxbulk_inst%qflx_surf_col(c),'state',soilbiogeochem_carbonstate_inst%surfdoc_acc_col(c)
          soilbiogeochem_carbonstate_inst%surfdoc_acc_col(c)=soilbiogeochem_carbonstate_inst%surfdoc_acc_col(c)+soilbiogeochem_carbonflux_inst%surfdoc_col(c)
+         temp_surfdoc_col(c)=0._r8
+         temp_subdoc_col(c)=0._r8
          if (water_inst%waterfluxbulk_inst%qflx_surf_col(c)>0._r8) then
             temp_surfdoc_col(c)=max(0._r8,min(water_inst%waterfluxbulk_inst%qflx_surf_col(c)*0.3_r8,soilbiogeochem_carbonstate_inst%surfdoc_acc_col(c)))
             soilbiogeochem_carbonstate_inst%surfdoc_acc_col(c)=soilbiogeochem_carbonstate_inst%surfdoc_acc_col(c)-temp_surfdoc_col(c)
          endif
-         write(iulog,*) 'LND2ATM CHECK SUB','flux',soilbiogeochem_carbonflux_inst%subdoc_col(c),'water',water_inst%waterfluxbulk_inst%qflx_drain_col(c)+water_inst%waterfluxbulk_inst%qflx_drain_perched_col(c),'state',soilbiogeochem_carbonstate_inst%subdoc_acc_col(c)
+         !write(iulog,*) 'LND2ATM CHECK ','temp_surf',temp_surfdoc_col(c)
+         !write(iulog,*) 'LND2ATM CHECK SUB','flux',soilbiogeochem_carbonflux_inst%subdoc_col(c),'water',water_inst%waterfluxbulk_inst%qflx_drain_col(c)+water_inst%waterfluxbulk_inst%qflx_drain_perched_col(c),'state',soilbiogeochem_carbonstate_inst%subdoc_acc_col(c)
          soilbiogeochem_carbonstate_inst%subdoc_acc_col(c)=soilbiogeochem_carbonstate_inst%subdoc_acc_col(c)+soilbiogeochem_carbonflux_inst%subdoc_col(c)
          if ((water_inst%waterfluxbulk_inst%qflx_drain_col(c)+water_inst%waterfluxbulk_inst%qflx_drain_perched_col(c))>0._r8) then
             temp_subdoc_col(c)=max(0._r8,min((water_inst%waterfluxbulk_inst%qflx_drain_col(c)+water_inst%waterfluxbulk_inst%qflx_drain_perched_col(c)) &
@@ -362,7 +363,7 @@ contains
          temp_surfdoc_col (bounds%begc:bounds%endc), &
          water_inst%waterlnd2atmbulk_inst%qflx_surfdoc_grc   (bounds%begg:bounds%endg), &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
-
+    !write(iulog,*) 'LND2ATM CHECK grc', water_inst%waterlnd2atmbulk_inst%qflx_surfdoc_grc   (bounds%begg:bounds%endg)
     call c2g( bounds, &
          temp_subdoc_col (bounds%begc:bounds%endc), &
          water_inst%waterlnd2atmbulk_inst%qflx_subdoc_grc   (bounds%begg:bounds%endg), &

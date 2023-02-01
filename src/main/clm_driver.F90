@@ -1298,7 +1298,6 @@ contains
     ! explicit bounds seemed to be needed to get around other compiler bugs.
     allocate(net_carbon_exchange_grc(bounds_proc%begg:bounds_proc%endg))
     net_carbon_exchange_grc = bgc_vegetation_inst%get_net_carbon_exchange_grc(bounds_proc)
-    write(iulog,*) 'Enter LND2ATM CHECK'
     call lnd2atm(bounds_proc,                                            &
          atm2lnd_inst, surfalb_inst, temperature_inst, frictionvel_inst, &
          water_inst, &
