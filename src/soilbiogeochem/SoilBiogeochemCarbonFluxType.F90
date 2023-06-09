@@ -33,14 +33,18 @@ module SoilBiogeochemCarbonFluxType
      real(r8), pointer :: c_overflow_vr                             (:,:,:) ! vertically-resolved C rejected by microbes that cannot process it (gC/m3/s)
      real(r8), pointer :: decomp_cascade_hr_vr_col                  (:,:,:) ! vertically-resolved het. resp. from decomposing C pools (gC/m3/s)
      real(r8), pointer :: decomp_cascade_hr_col                     (:,:)   ! vertically-integrated (diagnostic) het. resp. from decomposing C pools (gC/m2/s)
+     real(r8), pointer :: decomp_cascade_doc_vr_col                 (:,:,:) ! vertically-resolved DOC production from decomposing C pools (gC/m3/s)
+     real(r8), pointer :: decomp_cascade_doc_col                    (:,:)   ! vertically-integrated DOC from decomposing C pools (gC/m2/s)
      real(r8), pointer :: decomp_cascade_ctransfer_vr_col           (:,:,:) ! vertically-resolved C transferred along deomposition cascade (gC/m3/s)
      real(r8), pointer :: decomp_cascade_ctransfer_col              (:,:)   ! vertically-integrated (diagnostic) C transferred along decomposition cascade (gC/m2/s)
      real(r8), pointer :: cn_col                                    (:,:)   ! (gC/gN) C:N ratio by pool
      real(r8), pointer :: litr_lig_c_to_n_col                       (:)     ! (gC/gN) Average of leaf, fine root, and CWD lignin C:N ratio
      real(r8), pointer :: rf_decomp_cascade_col                     (:,:,:) ! (frac) respired fraction in decomposition step
+     real(r8), pointer :: df_decomp_cascade_col                     (:,:,:) ! (frac) doc fraction in decomposition step
      real(r8), pointer :: pathfrac_decomp_cascade_col               (:,:,:) ! (frac) what fraction of C passes from donor to receiver pool through a given transition
      real(r8), pointer :: decomp_k_col                              (:,:,:) ! rate coefficient for decomposition (1./sec)
      real(r8), pointer :: hr_vr_col                                 (:,:)   !  (gC/m3/s) total vertically-resolved het. resp. from decomposing C pools 
+     real(r8), pointer :: doc_vr_col                                (:,:)   !  (gC/m3/s) total vertically-resolved DOC from decomposing C pools 
      real(r8), pointer :: o_scalar_col                              (:,:)   !  fraction by which decomposition is limited by anoxia
      real(r8), pointer :: w_scalar_col                              (:,:)   !  fraction by which decomposition is limited by moisture availability
      real(r8), pointer :: t_scalar_col                              (:,:)   !  fraction by which decomposition is limited by temperature
@@ -53,6 +57,9 @@ module SoilBiogeochemCarbonFluxType
      real(r8), pointer :: fphr_col                                  (:,:)   ! fraction of potential heterotrophic respiration
 
      real(r8), pointer :: hr_col                                    (:)     ! (gC/m2/s) total heterotrophic respiration
+     real(r8), pointer :: doc_col                                   (:)     ! (gC/m2/s) total DOC prduction
+     real(r8), pointer :: ldoc_col                                  (:)     ! (gC/m2/s) Labile DOC: definition based on donor pool
+     real(r8), pointer :: rdoc_col                                  (:)     ! (gC/m2/s) Recalcitrant DOC: definition based on donor pool
      real(r8), pointer :: michr_col                                 (:)     ! (gC/m2/s) microbial heterotrophic respiration: donor-pool based definition, so expect it to be zero with MIMICS; microbial decomposition is responsible for heterotrophic respiration of donor pools (litter and soil), but in the accounting we assign it to the donor pool for consistency with CENTURY
      real(r8), pointer :: cwdhr_col                                 (:)     ! (gC/m2/s) coarse woody debris heterotrophic respiration: donor-pool based definition
      real(r8), pointer :: lithr_col                                 (:)     ! (gC/m2/s) litter heterotrophic respiration: donor-pool based definition
@@ -119,6 +126,7 @@ contains
      allocate(this%som_c_leached_col (begc:endc))                  ; this%som_c_leached_col (:)   =nan
      allocate(this%somc_fire_col     (begc:endc))                  ; this%somc_fire_col     (:)   =nan
      allocate(this%hr_vr_col         (begc:endc,1:nlevdecomp_full)); this%hr_vr_col         (:,:) =nan
+     allocate(this%doc_vr_col        (begc:endc,1:nlevdecomp_full)); this%doc_vr_col        (:,:) =nan
 
      allocate(this%decomp_cpools_sourcesink_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))                  
      this%decomp_cpools_sourcesink_col(:,:,:)= nan
@@ -132,6 +140,12 @@ contains
      allocate(this%decomp_cascade_hr_col(begc:endc,1:ndecomp_cascade_transitions))                             
      this%decomp_cascade_hr_col(:,:)= nan
 
+     allocate(this%decomp_cascade_doc_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions))        
+     this%decomp_cascade_doc_vr_col(:,:,:)= spval
+
+     allocate(this%decomp_cascade_doc_col(begc:endc,1:ndecomp_cascade_transitions))                             
+     this%decomp_cascade_doc_col(:,:)= nan
+
      allocate(this%decomp_cascade_ctransfer_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions)) 
      this%decomp_cascade_ctransfer_vr_col(:,:,:)= nan
 
@@ -143,6 +157,9 @@ contains
 
      allocate(this%rf_decomp_cascade_col(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions))
      this%rf_decomp_cascade_col(:,:,:) = nan
+
+     allocate(this%df_decomp_cascade_col(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions))
+     this%df_decomp_cascade_col(:,:,:) = nan
 
      allocate(this%pathfrac_decomp_cascade_col(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions))
      this%pathfrac_decomp_cascade_col(:,:,:) = nan
@@ -157,6 +174,9 @@ contains
      this%decomp_cpools_transport_tendency_col(:,:,:)= nan
 
      allocate(this%hr_col                  (begc:endc)) ; this%hr_col                  (:) = nan
+     allocate(this%doc_col                 (begc:endc)) ; this%doc_col                 (:) = nan
+     allocate(this%ldoc_col                (begc:endc)) ; this%ldoc_col                (:) = nan
+     allocate(this%rdoc_col                (begc:endc)) ; this%rdoc_col                (:) = nan
      allocate(this%michr_col               (begc:endc)) ; this%michr_col               (:) = nan
      allocate(this%cwdhr_col               (begc:endc)) ; this%cwdhr_col               (:) = nan
      allocate(this%lithr_col               (begc:endc)) ; this%lithr_col               (:) = nan
@@ -237,6 +257,21 @@ contains
              avgflag='A', long_name='total heterotrophic respiration', &
              ptr_col=this%hr_col)
 
+        this%doc_col(begc:endc) = spval
+        call hist_addfld1d (fname='DOC', units='gC/m^2/s', &
+             avgflag='A', long_name='total DOC production', &
+             ptr_col=this%doc_col)
+
+        this%ldoc_col(begc:endc) = spval
+        call hist_addfld1d (fname='LAB_DOC', units='gC/m^2/s', &
+             avgflag='A', long_name='Labile DOC production', &
+             ptr_col=this%ldoc_col)
+
+        this%rdoc_col(begc:endc) = spval
+        call hist_addfld1d (fname='REC_DOC', units='gC/m^2/s', &
+             avgflag='A', long_name='Recalcitrant DOC production', &
+             ptr_col=this%rdoc_col)
+
         if (decomp_method == mimics_decomp) then
            this%michr_col(begc:endc) = spval
            call hist_addfld1d (fname='MICC_HR', units='gC/m^2/s', &
@@ -283,10 +318,13 @@ contains
 
         this%decomp_cascade_hr_col(begc:endc,:)             = spval
         this%decomp_cascade_hr_vr_col(begc:endc,:,:)        = spval
+        this%decomp_cascade_doc_col(begc:endc,:)            = spval
+        this%decomp_cascade_doc_vr_col(begc:endc,:,:)       = spval
         this%decomp_cascade_ctransfer_col(begc:endc,:)      = spval
         this%decomp_cascade_ctransfer_vr_col(begc:endc,:,:) = spval
         this%pathfrac_decomp_cascade_col(begc:endc,:,:)     = spval
         this%rf_decomp_cascade_col(begc:endc,:,:)           = spval
+        this%df_decomp_cascade_col(begc:endc,:,:)           = spval
         do l = 1, ndecomp_cascade_transitions
 
            ! output the vertically integrated fluxes only as  default
@@ -310,6 +348,27 @@ contains
            call hist_addfld1d (fname=fieldname, units='gC/m^2/s',  &
                 avgflag='A', long_name=longname, &
                 ptr_col=data1dptr, default='inactive')
+
+           !-- DOC fluxes
+           data1dptr => this%decomp_cascade_doc_col(:,l)
+           ! check to see if there are multiple pathways that include doc production, and if so, note that in the history file
+           ii = 0
+           do jj = 1, ndecomp_cascade_transitions
+              if ( decomp_cascade_con%cascade_donor_pool(jj) == decomp_cascade_con%cascade_donor_pool(l) ) ii = ii+1
+           end do
+           if ( ii == 1 ) then
+              fieldname = &
+                   trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//'_DOC'
+           else
+              fieldname = &
+                   trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//'_DOC_'//&
+                   trim(decomp_cascade_con%decomp_pool_name_short(decomp_cascade_con%cascade_receiver_pool(l)))
+           endif
+           longname =  'DOC production from '//&
+                trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_donor_pool(l)))
+           call hist_addfld1d (fname=fieldname, units='gC/m^2/s',  &
+                avgflag='A', long_name=longname, &
+                ptr_col=data1dptr, default='active')
 
            !-- transfer fluxes (none from terminal pool, if present)
            if ( decomp_cascade_con%cascade_receiver_pool(l) /= 0 ) then
@@ -347,7 +406,30 @@ contains
                    trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_donor_pool(l)))
               call hist_addfld_decomp (fname=fieldname, units='gC/m^3/s',  type2d='levdcmp', &
                    avgflag='A', long_name=longname, &
-                   ptr_col=data2dptr, default='inactive')
+                   ptr_col=data2dptr, default='active')
+
+               !-- DOC fluxes
+                   data2dptr => this%decomp_cascade_doc_vr_col(:,:,l)
+                   ! check to see if there are multiple pathways that include DOC production, and if so, note that in the history file
+                   ii = 0
+                   do jj = 1, ndecomp_cascade_transitions
+                      if ( decomp_cascade_con%cascade_donor_pool(jj) == decomp_cascade_con%cascade_donor_pool(l) ) ii = ii+1
+                   end do
+                   if ( ii == 1 ) then
+                      fieldname = &
+                           trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))&
+                           //'_DOC'//trim(vr_suffix)
+                   else
+                      fieldname = &
+                           trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//'_DOC_'//&
+                           trim(decomp_cascade_con%decomp_pool_name_short(decomp_cascade_con%cascade_receiver_pool(l)))&
+                           //trim(vr_suffix)
+                   endif
+                   longname =  'DOC production from '//&
+                        trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_donor_pool(l)))
+                   call hist_addfld_decomp (fname=fieldname, units='gC/m^3/s',  type2d='levdcmp', &
+                        avgflag='A', long_name=longname, &
+                        ptr_col=data2dptr, default='active')
 
               !-- transfer fluxes (none from terminal pool, if present)
               if ( decomp_cascade_con%cascade_receiver_pool(l) /= 0 ) then
@@ -442,6 +524,11 @@ contains
            data2dptr => this%hr_vr_col(begc:endc,1:nlevsoi)
            call hist_addfld2d (fname='HR_vr', units='gC/m^3/s', type2d='levsoi', &
                 avgflag='A', long_name='total vertically resolved heterotrophic respiration', &
+                ptr_col=data2dptr)
+
+           data2dptr => this%doc_vr_col(begc:endc,1:nlevsoi)
+           call hist_addfld2d (fname='DOC_vr', units='gC/m^3/s', type2d='levsoi', &
+                avgflag='A', long_name='total vertically resolved DOC production', &
                 ptr_col=data2dptr)
         endif
 
@@ -757,12 +844,15 @@ contains
           do fi = 1,num_column
              i = filter_column(fi)
              this%decomp_cascade_hr_col(i,l)             = value_column
+             this%decomp_cascade_doc_col(i,l)            = value_column
              this%c_overflow_vr(i,j,l)                   = value_column
              this%decomp_cascade_hr_vr_col(i,j,l)        = value_column
+             this%decomp_cascade_doc_vr_col(i,j,l)       = value_column
              this%decomp_cascade_ctransfer_col(i,l)      = value_column
              this%decomp_cascade_ctransfer_vr_col(i,j,l) = value_column
              this%pathfrac_decomp_cascade_col(i,j,l)     = value_column
              this%rf_decomp_cascade_col(i,j,l)           = value_column
+             this%df_decomp_cascade_col(i,j,l)           = value_column
           end do
        end do
     end do
@@ -791,12 +881,16 @@ contains
        do fi = 1,num_column
           i = filter_column(fi)
           this%hr_vr_col(i,j) = value_column
+          this%doc_vr_col(i,j) = value_column
        end do
     end do
 
     do fi = 1,num_column
        i = filter_column(fi)
        this%hr_col(i)            = value_column
+       this%doc_col(i)           = value_column
+       this%ldoc_col(i)          = value_column
+       this%rdoc_col(i)          = value_column
        this%somc_fire_col(i)     = value_column  
        this%som_c_leached_col(i) = value_column
        this%somhr_col(i)         = value_column
@@ -855,7 +949,7 @@ contains
        this%som_c_leached_col(c) = 0._r8
     end do
 
-    ! vertically integrate HR and decomposition cascade fluxes
+    ! vertically integrate HR, DOC and decomposition cascade fluxes
     do k = 1, ndecomp_cascade_transitions
        do j = 1,nlevdecomp
           do fc = 1,num_soilc
@@ -864,6 +958,10 @@ contains
                   this%decomp_cascade_hr_col(c,k) + &
                   this%decomp_cascade_hr_vr_col(c,j,k) * dzsoi_decomp(j) 
 
+             this%decomp_cascade_doc_col(c,k) = &
+                  this%decomp_cascade_doc_col(c,k) + &
+                  this%decomp_cascade_doc_vr_col(c,j,k) * dzsoi_decomp(j) 
+
              this%decomp_cascade_ctransfer_col(c,k) = &
                   this%decomp_cascade_ctransfer_col(c,k) + &
                   this%decomp_cascade_ctransfer_vr_col(c,j,k) * dzsoi_decomp(j) 
@@ -871,11 +969,12 @@ contains
        end do
     end do
 
-    ! total heterotrophic respiration, vertically resolved (HR)
+    ! total heterotrophic respiration, vertically resolved (HR) & DOC prod.
     do j = 1,nlevdecomp
        do fc = 1,num_soilc
           c = filter_soilc(fc)
           this%hr_vr_col(c,j) = 0._r8
+          this%doc_vr_col(c,j) = 0._r8
        end do
     end do
     do k = 1, ndecomp_cascade_transitions
@@ -885,6 +984,9 @@ contains
              this%hr_vr_col(c,j) = &
                   this%hr_vr_col(c,j) + &
                   this%decomp_cascade_hr_vr_col(c,j,k)
+             this%doc_vr_col(c,j) = &
+                  this%doc_vr_col(c,j) + &
+                  this%decomp_cascade_doc_vr_col(c,j,k)
           end do
        end do
     end do
@@ -908,7 +1010,7 @@ contains
        end do
     end do
 
-    ! soil organic matter heterotrophic respiration 
+    ! soil organic matter heterotrophic respiration (SOMHR)
        associate(is_soil => decomp_cascade_con%is_soil) ! TRUE => pool is a soil pool  
          do k = 1, ndecomp_cascade_transitions
             if ( is_soil(decomp_cascade_con%cascade_donor_pool(k)) ) then
@@ -956,7 +1058,33 @@ contains
       end do
     end associate
 
-    ! total heterotrophic respiration (HR)
+    ! Labile dissolved organic carbon (ldoc)
+    associate(is_litter => decomp_cascade_con%is_litter ,&
+              is_cwd    => decomp_cascade_con%is_cwd) 
+      do k = 1, ndecomp_cascade_transitions
+         if ( is_litter(decomp_cascade_con%cascade_donor_pool(k)) .or. &
+              is_cwd(decomp_cascade_con%cascade_donor_pool(k))) then
+            do fc = 1,num_soilc
+               c = filter_soilc(fc)
+               this%ldoc_col(c) = this%ldoc_col(c) + this%decomp_cascade_doc_col(c,k)
+            end do
+         end if
+      end do
+    end associate
+
+    ! Recalcitrant dissolved organic carbon (rdoc)
+    associate(is_soil => decomp_cascade_con%is_soil) ! TRUE => pool is a soil pool  
+      do k = 1, ndecomp_cascade_transitions
+         if ( is_soil(decomp_cascade_con%cascade_donor_pool(k)) ) then
+            do fc = 1,num_soilc
+               c = filter_soilc(fc)
+               this%rdoc_col(c) = this%rdoc_col(c) + this%decomp_cascade_doc_col(c,k)
+            end do
+         end if
+      end do
+    end associate
+
+    ! total heterotrophic respiration (HR) & total DOC
        do fc = 1,num_soilc
           c = filter_soilc(fc)
        
@@ -965,6 +1093,9 @@ contains
                this%cwdhr_col(c) + &
                this%lithr_col(c) + &
                this%somhr_col(c)
+          this%doc_col(c) = &
+               this%ldoc_col(c) + &
+               this%rdoc_col(c)
        
        end do
 
