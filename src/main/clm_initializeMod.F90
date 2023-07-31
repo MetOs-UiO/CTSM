@@ -13,7 +13,7 @@ module clm_initializeMod
   use clm_varctl            , only : nsrest, nsrStartup, nsrContinue, nsrBranch, use_fates_sp
   use clm_varctl            , only : is_cold_start
   use clm_varctl            , only : iulog
-  use clm_varctl            , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_fates
+  use clm_varctl            , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_fates, use_fates_nocomp
   use clm_varctl            , only : use_soil_moisture_streams
   use clm_instur            , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft
   use clm_instur            , only : irrig_method, wt_glc_mec, topo_glc_mec, haslake, pct_urban_max
@@ -135,6 +135,7 @@ contains
     use clm_varctl                    , only : use_cn, use_fates
     use clm_varctl                    , only : use_crop, ndep_from_cpl, fates_spitfire_mode
     use clm_varorb                    , only : eccen, mvelpp, lambm0, obliqr
+    use clm_varctl                    , only : use_cropcal_streams
     use landunit_varcon               , only : landunit_varcon_init, max_lunit, numurbl
     use pftconMod                     , only : pftcon
     use decompInitMod                 , only : decompInit_clumps, decompInit_glcp
@@ -162,6 +163,7 @@ contains
     use restFileMod                   , only : restFile_getfile, restFile_open, restFile_close
     use restFileMod                   , only : restFile_read, restFile_write
     use ndepStreamMod                 , only : ndep_init, ndep_interp
+    use cropcalStreamMod              , only : cropcal_init, cropcal_interp, cropcal_advance
     use LakeCon                       , only : LakeConInit
     use SatellitePhenologyMod         , only : SatellitePhenologyInit, readAnnualVegetation, interpMonthlyVeg, SatellitePhenology
     use SnowSnicarMod                 , only : SnowAge_init, SnowOptics_init
@@ -449,11 +451,14 @@ contains
 
     else ! FATES OR Satellite phenology
 
-       ! For SP FATES-SP Initialize SP
+       ! For FATES-SP or FATES-NOCOMP Initialize SP
        ! Also for FATES with Dry-Deposition on as well (see above)
-       !if(use_fates_sp .or. (.not.use_cn) .or. (n_drydep > 0) )then  !  Replace with this when we have dry-deposition working
-       ! For now don't allow for dry-deposition because of issues in #1044 EBK Jun/17/2022
-       if( use_fates_sp .or. .not. use_fates )then
+       ! For now don't allow for dry-deposition with full fates 
+       ! because of issues in #1044 EBK Jun/17/2022
+       if( use_fates_nocomp .or. (.not. use_fates )) then
+          if (masterproc) then
+             write(iulog,'(a)')'Initializing Satellite Phenology'
+          end if
           call SatellitePhenologyInit(bounds_proc)
        end if
 
@@ -631,6 +636,21 @@ contains
        call t_stopf('init_ndep')
     end if
 
+    ! Initialize crop calendars
+    call t_startf('init_cropcal')
+    call cropcal_init(bounds_proc)
+    if (use_cropcal_streams) then
+      call cropcal_advance( bounds_proc )
+      !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+      do nc = 1,nclumps
+         call get_clump_bounds(nc, bounds_clump)
+         call cropcal_interp(bounds_clump, filter_inactive_and_active(nc)%num_pcropp, &
+              filter_inactive_and_active(nc)%pcropp, crop_inst)
+      end do
+      !$OMP END PARALLEL DO
+    end if
+    call t_stopf('init_cropcal')
+
     ! Initialize active history fields.
     ! This is only done if not a restart run. If a restart run, then this
     ! information has already been obtained from the restart data read above.
@@ -665,9 +685,9 @@ contains
        ! Call interpMonthlyVeg for dry-deposition so that mlaidiff will be calculated
        ! This needs to be done even if FATES, CN or CNDV is on!
        call interpMonthlyVeg(bounds_proc, canopystate_inst)
-    ! If fates has satellite phenology enabled, get the monthly veg values
-    ! prior to the first call to SatellitePhenology()
     elseif ( use_fates_sp ) then
+       ! If fates has satellite phenology enabled, get the monthly veg values
+       ! prior to the first call to SatellitePhenology()
        call interpMonthlyVeg(bounds_proc, canopystate_inst)
     end if
 
