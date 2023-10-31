@@ -4,7 +4,7 @@ module SoilBiogeochemDecompCascadeMIMICSMod
   ! !DESCRIPTION:
   ! Sets the coeffiecients used in the decomposition cascade submodel.  
   ! This uses the MIMICS parameters.
-  !
+  ! test
   ! !USES:
   use shr_kind_mod                       , only : r8 => shr_kind_r8
   use shr_const_mod                      , only : SHR_CONST_TKFRZ
